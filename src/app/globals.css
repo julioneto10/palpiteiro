@@ -194,3 +194,27 @@
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
   background-size: 14px 14px;
 }
+
+/* Faixa/marquee (tela de auth) */
+.tape {
+  background: var(--foreground);
+  color: var(--accent);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 0;
+  overflow: hidden;
+}
+.marquee {
+  display: flex;
+  gap: 28px;
+  white-space: nowrap;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+}
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
