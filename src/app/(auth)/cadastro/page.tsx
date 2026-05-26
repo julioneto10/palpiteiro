@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { signInWithGoogle, signInWithEmail } from "@/lib/actions/auth";
-import { Mail, Chrome } from "lucide-react";
+import { signUpWithEmail } from "@/lib/actions/auth";
+import { Mail, Loader2, UserPlus } from "lucide-react";
 
 export default function CadastroPage() {
-  const [state, formAction, isPending] = useActionState(signInWithEmail, null);
+  const [state, formAction, isPending] = useActionState(signUpWithEmail, null);
 
   return (
     <div className="w-full max-w-sm space-y-8">
@@ -17,69 +17,74 @@ export default function CadastroPage() {
         <h1 className="font-heading text-4xl font-extrabold tracking-tight text-primary">
           PALPITEIRO
         </h1>
-        <p className="text-muted-foreground">
-          Crie sua conta e entre no bolao!
-        </p>
+        <p className="text-muted-foreground">Crie sua conta e entre no bolao!</p>
       </div>
 
       <Card className="border-0 shadow-lg">
-        <CardContent className="space-y-4 pt-6">
-          <form action={signInWithGoogle}>
-            <Button
-              type="submit"
-              variant="outline"
-              className="w-full gap-2 h-12 text-base"
-            >
-              <Chrome className="h-5 w-5" />
-              Cadastrar com Google
-            </Button>
-          </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                ou
-              </span>
-            </div>
-          </div>
-
+        <CardContent className="pt-6">
           {state?.success ? (
             <div className="rounded-lg bg-success/10 p-4 text-center">
               <Mail className="mx-auto h-8 w-8 text-success mb-2" />
-              <p className="font-medium text-success">
-                Link enviado!
-              </p>
+              <p className="font-medium text-success">Quase la!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Verifique seu email para completar o cadastro
+                Confirme seu email para ativar a conta.
               </p>
             </div>
           ) : (
             <form action={formAction} className="space-y-3">
               <Input
+                type="text"
+                name="displayName"
+                placeholder="Seu nome"
+                autoComplete="name"
+                required
+                className="h-12"
+              />
+              <Input
                 type="email"
                 name="email"
                 placeholder="seu@email.com"
+                autoComplete="email"
+                required
+                className="h-12"
+              />
+              <Input
+                type="password"
+                name="password"
+                placeholder="Senha (min. 6 caracteres)"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                className="h-12"
+              />
+              <Input
+                type="password"
+                name="confirm"
+                placeholder="Confirmar senha"
+                autoComplete="new-password"
+                minLength={6}
                 required
                 className="h-12"
               />
               <Button
                 type="submit"
-                className="w-full h-12 text-base bg-primary hover:bg-primary/90"
+                className="w-full h-12 text-base gap-2"
                 disabled={isPending}
               >
-                <Mail className="h-5 w-5 mr-2" />
-                {isPending ? "Enviando..." : "Cadastrar com Email"}
+                {isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <UserPlus className="h-5 w-5" />
+                )}
+                {isPending ? "Criando conta..." : "Criar conta"}
               </Button>
-            </form>
-          )}
 
-          {state?.error && (
-            <p className="text-sm text-destructive text-center">
-              {state.error}
-            </p>
+              {state?.error && (
+                <p className="text-sm text-destructive text-center">
+                  {state.error}
+                </p>
+              )}
+            </form>
           )}
         </CardContent>
       </Card>
