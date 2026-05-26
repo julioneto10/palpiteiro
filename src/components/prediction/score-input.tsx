@@ -18,12 +18,12 @@ export function ScoreInput({
   max = 20,
 }: ScoreInputProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-center gap-3">
       <Button
         type="button"
         variant="outline"
         size="icon"
-        className="h-10 w-10 rounded-full shrink-0"
+        className="h-11 w-11 shrink-0 rounded-full border-2 border-foreground/80 bg-card"
         onClick={() => onChange(Math.max(0, value - 1))}
         disabled={disabled || value <= 0}
       >
@@ -31,7 +31,7 @@ export function ScoreInput({
       </Button>
       <span
         className={cn(
-          "font-heading text-4xl font-extrabold tabular-nums w-12 text-center select-none",
+          "w-14 select-none text-center font-heading text-6xl font-black leading-none tabular-nums",
           disabled && "opacity-50"
         )}
       >
@@ -41,7 +41,7 @@ export function ScoreInput({
         type="button"
         variant="outline"
         size="icon"
-        className="h-10 w-10 rounded-full shrink-0"
+        className="h-11 w-11 shrink-0 rounded-full border-2 border-foreground/80 bg-card"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={disabled || value >= max}
       >

@@ -45,26 +45,18 @@ export default async function JogosPage() {
   return (
     <div className="space-y-6">
       {/* Quick navigation */}
-      <div className="flex gap-2">
-        <Link
-          href="/jogos/grupos"
-          className="flex-1 rounded-lg bg-primary/10 px-3 py-2 text-center text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
-        >
-          Fase de Grupos
-        </Link>
-        <Link
-          href="/jogos/chaves"
-          className="flex-1 rounded-lg bg-accent/20 px-3 py-2 text-center text-sm font-medium text-accent-foreground hover:bg-accent/30 transition-colors"
-        >
-          Chaves
-        </Link>
-      </div>
+      <Link
+        href="/jogos/grupos"
+        className="flex items-center justify-center rounded-xl bg-primary/10 px-3 py-2.5 text-center text-sm font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary/20"
+      >
+        Tabela / Fase de Grupos
+      </Link>
 
       {/* Live matches */}
       {liveMatches.length > 0 && (
-        <section>
-          <h2 className="font-heading text-lg font-bold mb-2 text-destructive flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+        <section className="space-y-2">
+          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-destructive">
+            <span className="live-dot" />
             Ao Vivo
           </h2>
           <MatchList matches={liveMatches} predictions={predictions} />
@@ -73,8 +65,8 @@ export default async function JogosPage() {
 
       {/* Upcoming matches */}
       {upcomingMatches.length > 0 && (
-        <section>
-          <h2 className="font-heading text-lg font-bold mb-2">
+        <section className="space-y-2">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Proximos Jogos
           </h2>
           <MatchList matches={upcomingMatches} predictions={predictions} />
@@ -83,8 +75,8 @@ export default async function JogosPage() {
 
       {/* Finished matches */}
       {finishedMatches.length > 0 && (
-        <section>
-          <h2 className="font-heading text-lg font-bold mb-2 text-muted-foreground">
+        <section className="space-y-2">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Resultados
           </h2>
           <MatchList matches={finishedMatches} predictions={predictions} />
