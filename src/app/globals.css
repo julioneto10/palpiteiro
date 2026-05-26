@@ -141,3 +141,56 @@
     @apply font-sans;
   }
 }
+
+/* ===== Design utilities (Claude Design) ===== */
+
+/* Pulse "ao vivo" */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--destructive);
+  position: relative;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: var(--destructive);
+  opacity: 0.35;
+  animation: ppulse 1.4s ease-out infinite;
+}
+@keyframes ppulse {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  80% { transform: scale(1.8); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Medalhas de podio no ranking */
+.rank-medal {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  color: var(--muted-foreground);
+  background: var(--secondary);
+  border-radius: 999px;
+}
+.rank-medal.rank-1 { background: linear-gradient(160deg, #FFE371, #F2B600); color: #4A3500; }
+.rank-medal.rank-2 { background: linear-gradient(160deg, #F0F0F0, #BBBFC1); color: #2E2E2E; }
+.rank-medal.rank-3 { background: linear-gradient(160deg, #F4C28A, #B07A3A); color: #3B2300; }
+
+/* Gradiente de estadio (heros) */
+.bg-stadium {
+  background:
+    radial-gradient(ellipse at 50% -20%, color-mix(in oklab, var(--accent) 60%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--primary) 0%, #0A6E3B 100%);
+}
+
+/* Fundo pontilhado sutil */
+.dots-bg {
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 14px 14px;
+}

@@ -10,15 +10,7 @@ import { ShareInvite } from "@/components/group/share-invite";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Crown,
-  Settings,
-  Trophy,
-  Medal,
-  Award,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, Crown, Settings, Users } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -52,16 +44,18 @@ export default async function BolaoDetalhePage({
   const isAdmin = membership?.role === "admin";
   const isMember = !!membership;
 
-  const RankIcon = ({ rank }: { rank: number }) => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
-    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />;
-    return (
-      <span className="text-sm font-bold text-muted-foreground w-5 text-center">
-        {rank}
-      </span>
-    );
-  };
+  const RankIcon = ({ rank }: { rank: number }) => (
+    <span
+      className={cn(
+        "rank-medal h-9 w-9 text-sm",
+        rank === 1 && "rank-1",
+        rank === 2 && "rank-2",
+        rank === 3 && "rank-3"
+      )}
+    >
+      {rank}
+    </span>
+  );
 
   return (
     <div className="space-y-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface HeaderProps {
@@ -23,35 +23,31 @@ export function Header({ user, isAdmin }: HeaderProps) {
     : "?";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
         <Link href="/jogos" className="flex items-center gap-2">
-          <span className="font-heading text-xl font-extrabold tracking-tight text-primary">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-foreground font-heading text-base font-black leading-none text-accent">
+            P
+          </span>
+          <span className="font-heading text-xl font-black tracking-tight text-foreground">
             PALPITEIRO
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {isAdmin && (
             <Link
               href="/admin"
               title="Mesa de Resultados"
-              className="relative rounded-full p-2 text-primary hover:bg-primary/10 transition-colors"
+              className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-accent-foreground transition-transform active:scale-95"
             >
-              <ShieldCheck className="h-5 w-5" />
+              <ShieldCheck className="h-[18px] w-[18px]" />
             </Link>
           )}
-          <Link
-            href="/notificacoes"
-            className="relative rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
-
           <Link href="/perfil">
-            <Avatar className="h-8 w-8 border-2 border-primary/20">
+            <Avatar className="h-9 w-9">
               <AvatarImage src={user?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+              <AvatarFallback className="bg-foreground text-[12px] font-bold text-background">
                 {initials}
               </AvatarFallback>
             </Avatar>

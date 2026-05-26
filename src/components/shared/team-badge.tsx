@@ -14,49 +14,45 @@ export function TeamBadge({
   showName = true,
   className,
 }: TeamBadgeProps) {
-  const sizeClasses = {
-    sm: "text-lg",
-    md: "text-2xl",
-    lg: "text-4xl",
-  };
+  const chipClass = {
+    sm: "h-9 w-9 text-lg rounded-lg",
+    md: "h-11 w-11 text-2xl rounded-xl",
+    lg: "h-14 w-14 text-[2rem] rounded-2xl",
+  }[size];
 
-  const textSizes = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
-  };
-
-  if (!team) {
-    return (
-      <div className={cn("flex items-center gap-2", className)}>
-        <span className={sizeClasses[size]}>🏳️</span>
-        {showName && (
-          <span className={cn("font-medium text-muted-foreground", textSizes[size])}>
-            A definir
-          </span>
-        )}
-      </div>
-    );
-  }
-
-  // Map FIFA codes to flag emojis
-  const flagEmoji = getFlagEmoji(team.code);
+  const flagEmoji = team ? getFlagEmoji(team.code) : "🏳️";
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <span className={sizeClasses[size]}>{flagEmoji}</span>
-      {showName && (
-        <span className={cn("font-medium", textSizes[size])}>
-          {team.name}
-        </span>
-      )}
+      <span
+        className={cn(
+          "grid shrink-0 place-items-center border border-border bg-secondary leading-none",
+          chipClass
+        )}
+      >
+        {flagEmoji}
+      </span>
+      {showName &&
+        (team ? (
+          <div className="min-w-0 leading-tight">
+            <div className="font-heading text-sm font-extrabold tracking-wide">
+              {team.code}
+            </div>
+            <div className="truncate text-[11px] font-medium text-muted-foreground">
+              {team.name}
+            </div>
+          </div>
+        ) : (
+          <span className="text-xs font-medium text-muted-foreground">
+            A definir
+          </span>
+        ))}
     </div>
   );
 }
 
 function getFlagEmoji(countryCode: string): string {
   const codeMap: Record<string, string> = {
-    // Common codes
     BRA: "🇧🇷", ARG: "🇦🇷", FRA: "🇫🇷", GER: "🇩🇪", ESP: "🇪🇸",
     USA: "🇺🇸", MAR: "🇲🇦",
     ENG: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", POR: "🇵🇹", NED: "🇳🇱", BEL: "🇧🇪", CRO: "🇭🇷",
@@ -74,7 +70,7 @@ function getFlagEmoji(countryCode: string): string {
     BHR: "🇧🇭", IDN: "🇮🇩", VIE: "🇻🇳", THA: "🇹🇭",
     ITA: "🇮🇹", AUT: "🇦🇹", CZE: "🇨🇿", UKR: "🇺🇦", ROU: "🇷🇴",
     SVK: "🇸🇰", SVN: "🇸🇮", HUN: "🇭🇺", SWE: "🇸🇪", NOR: "🇳🇴",
-    FIN: "🇫🇮", ISL: "🇮🇸", IRL: "🇮🇪", NIR: "🇬🇧", SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", // Scotland
+    FIN: "🇫🇮", ISL: "🇮🇸", IRL: "🇮🇪", NIR: "🇬🇧", SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
     GRE: "🇬🇷", TUR: "🇹🇷", RUS: "🇷🇺", GEO: "🇬🇪", ALB: "🇦🇱",
     BIH: "🇧🇦", MNE: "🇲🇪", MKD: "🇲🇰", KOS: "🇽🇰",
     NZL: "🇳🇿", PNG: "🇵🇬", NCL: "🇳🇨", FIJ: "🇫🇯",

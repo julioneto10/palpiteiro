@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy } from "lucide-react";
 
 export const metadata = {
   title: "Ranking",
@@ -30,24 +30,18 @@ export default async function RankingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const RankIcon = ({ rank }: { rank: number }) => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
-    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />;
-    return (
-      <span className="text-sm font-bold text-muted-foreground w-5 text-center">
-        {rank}
-      </span>
-    );
-  };
-
   return (
     <div className="space-y-4">
-      <h1 className="font-heading text-xl font-extrabold">Ranking Global</h1>
+      <div className="flex items-center gap-2">
+        <Trophy className="h-5 w-5 text-accent" />
+        <h1 className="font-heading text-2xl font-black tracking-tight">
+          RANKING GERAL
+        </h1>
+      </div>
 
       {leaderboard && leaderboard.length > 0 ? (
-        <Card>
-          <CardContent className="p-0 divide-y">
+        <Card className="overflow-hidden">
+          <CardContent className="p-0 divide-y divide-border">
             {leaderboard.map((entry, index) => {
               const profile = entry.profile as {
                 display_name: string | null;
@@ -61,38 +55,48 @@ export default async function RankingPage() {
                 <div
                   key={entry.user_id}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3",
-                    isCurrentUser && "bg-primary/5",
-                    rank <= 3 && "bg-accent/5"
+                    "flex items-center gap-3 px-3 py-2.5",
+                    isCurrentUser && "bg-primary/5"
                   )}
                 >
-                  <RankIcon rank={rank} />
-                  <Avatar className="h-8 w-8">
+                  <span
+                    className={cn(
+                      "rank-medal h-9 w-9 text-sm",
+                      rank === 1 && "rank-1",
+                      rank === 2 && "rank-2",
+                      rank === 3 && "rank-3"
+                    )}
+                  >
+                    {rank}
+                  </span>
+                  <Avatar className="h-9 w-9">
                     <AvatarImage src={profile?.avatar_url ?? undefined} />
-                    <AvatarFallback className="text-xs font-bold">
+                    <AvatarFallback className="bg-secondary text-xs font-bold">
                       {(profile?.display_name ?? "?")[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p
                       className={cn(
-                        "text-sm font-medium truncate",
-                        isCurrentUser && "text-primary font-bold"
+                        "truncate text-sm font-semibold",
+                        isCurrentUser && "text-primary"
                       )}
                     >
                       {profile?.display_name ?? "Anonimo"}
                       {isCurrentUser && " (voce)"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {entry.correct_winners} acertos •{" "}
-                      {entry.exact_scores} placares exatos
+                      {entry.correct_winners} acertos · {entry.exact_scores}{" "}
+                      placares exatos
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-heading text-lg font-extrabold text-primary">
+                    <p className="font-heading text-xl font-black leading-none text-primary">
                       {entry.total_points}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">pts</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                      pts
+                    </p>
                   </div>
                 </div>
               );
@@ -100,11 +104,9 @@ export default async function RankingPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="text-center py-16 space-y-2">
+        <div className="space-y-2 py-16 text-center">
           <p className="text-4xl">🏆</p>
-          <p className="font-heading text-lg font-bold">
-            Ranking vazio
-          </p>
+          <p className="font-heading text-lg font-bold">Ranking vazio</p>
           <p className="text-sm text-muted-foreground">
             O ranking sera atualizado conforme os jogos acontecerem.
           </p>

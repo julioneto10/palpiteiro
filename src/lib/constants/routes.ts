@@ -15,9 +15,6 @@ export const ROUTES = {
   bolaoChat: (groupId: string) => `/boloes/${groupId}/chat`,
   bolaoMembros: (groupId: string) => `/boloes/${groupId}/membros`,
   bolaoConfig: (groupId: string) => `/boloes/${groupId}/config`,
-  disputas: "/disputas",
-  novaDisputa: "/disputas/nova",
-  disputaDetalhe: (disputeId: string) => `/disputas/${disputeId}`,
   ranking: "/ranking",
   palpiteCampeao: "/palpites/campeao",
   admin: "/admin",
@@ -25,7 +22,6 @@ export const ROUTES = {
   perfil: "/perfil",
   editarPerfil: "/perfil/editar",
   perfilUsuario: (userId: string) => `/perfil/${userId}`,
-  notificacoes: "/notificacoes",
   convite: (code: string) => `/convite/${code}`,
 } as const;
 
