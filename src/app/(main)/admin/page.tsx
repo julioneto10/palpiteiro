@@ -36,7 +36,7 @@ export default async function AdminPage() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
           <div>
-            <h1 className="font-heading text-xl font-extrabold">
+            <h1 className="font-heading text-xl font-black uppercase tracking-tight">
               Mesa de Resultados
             </h1>
             <p className="text-[11px] text-muted-foreground">

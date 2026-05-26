@@ -38,7 +38,7 @@ export default async function AuditoriaPage() {
         <div className="flex items-center gap-2">
           <ScrollText className="h-5 w-5 text-primary" />
           <div>
-            <h1 className="font-heading text-xl font-extrabold">Auditoria</h1>
+            <h1 className="font-heading text-xl font-black uppercase tracking-tight">Auditoria</h1>
             <p className="text-[11px] text-muted-foreground">
               Todo lancamento e correcao de resultado fica registrado aqui
             </p>

@@ -42,7 +42,9 @@ export default async function BoloesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-heading text-xl font-extrabold">Meus Boloes</h1>
+      <h1 className="font-heading text-2xl font-black uppercase tracking-tight">
+        Meus Boloes
+      </h1>
 
       {/* Actions */}
       <div className="flex gap-2">
@@ -94,7 +96,7 @@ export default async function BoloesPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-heading text-lg font-extrabold text-primary">
+                      <p className="font-heading text-2xl font-black text-primary leading-none">
                         {membership.total_points}
                       </p>
                       <p className="text-[10px] text-muted-foreground">

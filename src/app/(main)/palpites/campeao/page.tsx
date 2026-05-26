@@ -51,7 +51,7 @@ export default async function PalpiteCampeaoPage() {
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
           <div>
-            <h1 className="font-heading text-xl font-extrabold">
+            <h1 className="font-heading text-xl font-black uppercase tracking-tight">
               Palpite de Campeao
             </h1>
             <p className="text-[11px] text-muted-foreground">

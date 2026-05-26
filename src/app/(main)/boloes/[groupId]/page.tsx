@@ -100,7 +100,7 @@ export default async function BolaoDetalhePage({
       <div className="grid grid-cols-3 gap-2">
         <Card size="sm">
           <CardContent className="p-2 text-center">
-            <p className="font-heading text-lg font-extrabold text-primary">
+            <p className="font-heading text-2xl font-black text-primary leading-none">
               {scoring.correct_winner}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -110,7 +110,7 @@ export default async function BolaoDetalhePage({
         </Card>
         <Card size="sm">
           <CardContent className="p-2 text-center">
-            <p className="font-heading text-lg font-extrabold text-primary">
+            <p className="font-heading text-2xl font-black text-primary leading-none">
               +{scoring.exact_score}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -120,7 +120,7 @@ export default async function BolaoDetalhePage({
         </Card>
         <Card size="sm">
           <CardContent className="p-2 text-center">
-            <p className="font-heading text-lg font-extrabold text-primary">
+            <p className="font-heading text-2xl font-black text-primary leading-none">
               {scoring.correct_scorer}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -198,7 +198,7 @@ export default async function BolaoDetalhePage({
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-heading text-lg font-extrabold text-primary">
+                    <p className="font-heading text-2xl font-black text-primary leading-none">
                       {member.total_points}
                     </p>
                     <p className="text-[10px] text-muted-foreground">pts</p>

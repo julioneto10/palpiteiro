@@ -72,7 +72,9 @@ export default async function PalpitesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-heading text-xl font-extrabold">Meus Palpites</h1>
+      <h1 className="font-heading text-2xl font-black uppercase tracking-tight">
+        Meus Palpites
+      </h1>
 
       {/* Atalhos */}
       <div className="grid grid-cols-2 gap-2">
@@ -94,7 +96,7 @@ export default async function PalpitesPage() {
       <div className="grid grid-cols-4 gap-2">
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className="font-heading text-xl font-extrabold text-primary">
+            <p className="font-heading text-2xl font-black text-primary">
               {totalPoints}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -104,7 +106,7 @@ export default async function PalpitesPage() {
         </Card>
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className="font-heading text-xl font-extrabold">
+            <p className="font-heading text-2xl font-black">
               {predictions.length}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -114,7 +116,7 @@ export default async function PalpitesPage() {
         </Card>
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className="font-heading text-xl font-extrabold text-success">
+            <p className="font-heading text-2xl font-black text-success">
               {exactScores}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
@@ -124,7 +126,7 @@ export default async function PalpitesPage() {
         </Card>
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className="font-heading text-xl font-extrabold">
+            <p className="font-heading text-2xl font-black">
               {accuracy}%
             </p>
             <p className="text-[9px] text-muted-foreground uppercase font-medium">
