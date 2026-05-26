@@ -1,100 +1,100 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Trophy, Users, Swords, Share2, Sparkles } from "lucide-react";
+import { Trophy, Users, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+
+const TAPE_ITEMS = [
+  "★ COPA DO MUNDO 2026 ★",
+  "O MAIOR BOLAO ENTRE AMIGOS",
+  "★ PALPITEIRO ★",
+  "BRA · ARG · FRA · ESP · ENG",
+];
 
 const FEATURES = [
   {
     icon: Sparkles,
     title: "Palpites",
     description:
-      "Preveja o placar exato e o artilheiro de cada jogo da Copa do Mundo 2026.",
+      "Preveja o placar e o artilheiro de cada jogo da Copa do Mundo 2026.",
   },
   {
     icon: Users,
     title: "Boloes",
-    description:
-      "Crie boloes com seus amigos, familia ou colegas de trabalho.",
-  },
-  {
-    icon: Swords,
-    title: "Disputas 1v1",
-    description:
-      "Desafie seus amigos para duelos diretos e prove quem entende mais de futebol.",
+    description: "Crie um bolao e chame os amigos, a familia e a galera do trampo.",
   },
   {
     icon: Trophy,
     title: "Ranking",
-    description:
-      "Acompanhe sua posicao no ranking global e nos seus boloes.",
+    description: "Acompanhe quem manda no ranking e palpite no campeao da Copa.",
   },
   {
-    icon: Share2,
-    title: "Compartilhe",
+    icon: ShieldCheck,
+    title: "Jogo limpo",
     description:
-      "Compartilhe seus palpites e provoce seus amigos no WhatsApp e Instagram.",
+      "Palpites travam no apito e os resultados ficam auditados. Sem trapaca.",
   },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-dvh flex flex-col">
-      {/* Hero */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-16 bg-gradient-to-b from-primary/15 via-primary/5 to-background">
-        <div className="space-y-6 max-w-md">
-          <div className="space-y-2">
-            <p className="text-5xl">⚽</p>
-            <h1 className="font-heading text-5xl font-extrabold tracking-tight text-primary">
-              PALPITEIRO
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              O bolao mais divertido da Copa do Mundo 2026
-            </p>
+    <div className="min-h-dvh">
+      {/* Hero escuro */}
+      <section className="relative overflow-hidden bg-foreground text-background">
+        <div className="tape absolute inset-x-0 top-0">
+          <div className="marquee">
+            {[...TAPE_ITEMS, ...TAPE_ITEMS].map((item, i) => (
+              <span key={i}>{item}</span>
+            ))}
           </div>
+        </div>
 
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Faca seus palpites, crie boloes com amigos, dispute 1v1 e veja
-            quem eh o maior palpiteiro do Brasil!
+        <div className="mx-auto flex max-w-md flex-col gap-6 px-6 pb-12 pt-20">
+          <h1 className="font-heading text-[76px] font-black uppercase leading-[0.82] tracking-tight">
+            PAL
+            <br />
+            PI
+            <br />
+            TEI<span className="text-accent">RO</span>
+          </h1>
+          <p className="max-w-[300px] text-base leading-snug text-background/70">
+            O bolao mais divertido da Copa do Mundo 2026. Palpite os jogos,
+            dispute com os amigos e suba no ranking.
           </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/cadastro">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto text-base px-8 h-12 bg-primary hover:bg-primary/90"
-              >
-                Comecar agora
-              </Button>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/cadastro"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3.5 text-[15px] font-extrabold text-accent-foreground transition active:scale-[0.99]"
+            >
+              Comecar agora <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/login">
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto text-base px-8 h-12"
-              >
-                Ja tenho conta
-              </Button>
+            <Link
+              href="/login"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-background transition hover:bg-white/[0.04]"
+            >
+              Ja tenho conta
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="px-4 py-12 max-w-lg mx-auto w-full">
-        <h2 className="font-heading text-xl font-extrabold text-center mb-8">
+      {/* Features (creme) */}
+      <section className="mx-auto w-full max-w-lg px-5 py-12">
+        <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
           Como funciona
         </h2>
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="flex items-start gap-4 p-4 rounded-xl bg-card border"
+              className="flex items-start gap-4 rounded-2xl border border-border bg-card p-4"
             >
-              <div className="rounded-lg bg-primary/10 p-2.5">
-                <Icon className="h-5 w-5 text-primary" />
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm">{title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <h3 className="font-heading text-base font-extrabold uppercase tracking-wide">
+                  {title}
+                </h3>
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   {description}
                 </p>
               </div>
@@ -103,9 +103,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="text-center py-6 px-4 border-t text-xs text-muted-foreground">
-        <p>Palpiteiro &copy; 2026. Feito com ⚽ no Brasil.</p>
+      <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
+        Palpiteiro &copy; 2026 · Feito com ⚽ no Brasil
       </footer>
     </div>
   );
