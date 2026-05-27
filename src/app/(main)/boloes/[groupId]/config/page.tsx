@@ -5,13 +5,22 @@ import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateGroupSettings } from "@/lib/actions/groups";
+import { updateGroupSettings, deleteGroup } from "@/lib/actions/groups";
 import { DEFAULT_SCORING } from "@/lib/constants/scoring";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Group } from "@/lib/types/database";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export default function BolaoConfigPage() {
   const router = useRouter();
@@ -19,10 +28,17 @@ export default function BolaoConfigPage() {
   const groupId = params.groupId as string;
   const [loading, setLoading] = useState(false);
   const [group, setGroup] = useState<Group | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadGroup() {
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUserId(user?.id ?? null);
       const { data } = await supabase
         .from("groups")
         .select("*")
@@ -32,6 +48,21 @@ export default function BolaoConfigPage() {
     }
     loadGroup();
   }, [groupId]);
+
+  async function handleDelete() {
+    setDeleting(true);
+    const result = await deleteGroup(groupId);
+    if (result.error) {
+      toast.error(result.error);
+      setDeleting(false);
+      setConfirmOpen(false);
+    } else {
+      toast.success("Bolao excluido.");
+      router.push("/boloes");
+    }
+  }
+
+  const isOwner = !!group && !!userId && group.owner_id === userId;
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -189,6 +220,57 @@ export default function BolaoConfigPage() {
           {loading ? "Salvando..." : "Salvar Alteracoes"}
         </Button>
       </form>
+
+      {isOwner && (
+        <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm font-bold text-destructive">Zona de perigo</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Excluir o bolao remove o ranking e todos os participantes. Os
+            palpites dos jogos NAO sao afetados (sao do app todo). Nao da pra
+            desfazer.
+          </p>
+          <Button
+            variant="destructive"
+            className="mt-3 w-full gap-2"
+            onClick={() => setConfirmOpen(true)}
+          >
+            <Trash2 className="h-4 w-4" />
+            Excluir bolao
+          </Button>
+        </div>
+      )}
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir &quot;{group.name}&quot;?</DialogTitle>
+            <DialogDescription>
+              Essa acao nao pode ser desfeita. O bolao e o ranking dele serao
+              removidos para todos os membros.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose
+              render={<Button variant="outline" disabled={deleting} />}
+            >
+              Cancelar
+            </DialogClose>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {deleting ? "Excluindo..." : "Excluir definitivamente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

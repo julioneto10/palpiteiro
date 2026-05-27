@@ -224,6 +224,36 @@ export async function leaveGroup(groupId: string) {
   return { success: true };
 }
 
+export async function deleteGroup(groupId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Voce precisa estar logado." };
+  }
+
+  // So o dono pode excluir
+  const { data: group } = await supabase
+    .from("groups")
+    .select("owner_id")
+    .eq("id", groupId)
+    .single();
+
+  if (!group || group.owner_id !== user.id) {
+    return { error: "Apenas o dono pode excluir o bolao." };
+  }
+
+  const { error } = await supabase.from("groups").delete().eq("id", groupId);
+  if (error) {
+    return { error: "Erro ao excluir o bolao." };
+  }
+
+  revalidatePath("/boloes");
+  return { success: true };
+}
+
 export async function updateGroupSettings(groupId: string, formData: FormData) {
   const supabase = await createClient();
   const {
