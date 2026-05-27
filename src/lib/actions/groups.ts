@@ -128,13 +128,14 @@ export async function joinGroup(inviteCode: string) {
 
   const code = inviteCode.trim().toUpperCase();
 
-  // Find the group
-  const { data: group } = await supabase
+  // Busca pelo codigo ignorando RLS (boloes privados ficam invisiveis p/ nao-membros).
+  const admin = createAdminClient();
+  const { data: group } = await admin
     .from("groups")
     .select("*")
     .eq("invite_code", code)
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
 
   if (!group) {
     return { error: "Bolao nao encontrado. Verifique o codigo." };
@@ -152,8 +153,8 @@ export async function joinGroup(inviteCode: string) {
     return { error: "Voce ja faz parte deste bolao.", groupId: group.id };
   }
 
-  // Check member limit
-  const { count } = await supabase
+  // Check member limit (via admin: nao-membros nao enxergam group_members por RLS)
+  const { count } = await admin
     .from("group_members")
     .select("*", { count: "exact", head: true })
     .eq("group_id", group.id);

@@ -1,5 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Group, GroupMember, Profile } from "@/lib/types/database";
+
+/**
+ * Busca um bolao pelo CODIGO de convite ignorando a RLS — o proprio codigo
+ * e a autorizacao. Necessario porque boloes privados ficam invisiveis para
+ * quem ainda nao e membro (caso de quem recebe o convite).
+ */
+export async function getGroupByInviteCodeAdmin(inviteCode: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("groups")
+    .select("*")
+    .eq("invite_code", inviteCode.trim().toUpperCase())
+    .eq("is_active", true)
+    .maybeSingle();
+  return data as Group | null;
+}
+
+export async function getGroupMemberCountAdmin(groupId: string) {
+  const admin = createAdminClient();
+  const { count } = await admin
+    .from("group_members")
+    .select("*", { count: "exact", head: true })
+    .eq("group_id", groupId);
+  return count ?? 0;
+}
 
 export type GroupWithMemberCount = Group & { member_count: number };
 

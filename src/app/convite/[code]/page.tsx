@@ -1,5 +1,7 @@
-import { getGroupByInviteCode } from "@/lib/queries/groups";
-import { getGroupMemberCount } from "@/lib/queries/groups";
+import {
+  getGroupByInviteCodeAdmin,
+  getGroupMemberCountAdmin,
+} from "@/lib/queries/groups";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const group = await getGroupByInviteCode(code);
+  const group = await getGroupByInviteCodeAdmin(code);
   return {
     title: group ? `Entrar no bolao: ${group.name}` : "Convite",
     description: group
@@ -30,7 +32,7 @@ export default async function ConvitePage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const group = await getGroupByInviteCode(code);
+  const group = await getGroupByInviteCodeAdmin(code);
 
   if (!group) {
     return (
@@ -58,7 +60,7 @@ export default async function ConvitePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const memberCount = await getGroupMemberCount(group.id);
+  const memberCount = await getGroupMemberCountAdmin(group.id);
 
   // If user is logged in, check if already a member
   if (user) {
