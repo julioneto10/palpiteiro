@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -113,7 +112,9 @@ export async function createGroup(formData: FormData) {
 
   await recomputeStandings();
   revalidatePath("/boloes");
-  redirect(`/boloes/${group.id}`);
+  // Retorna o id e deixa o CLIENTE navegar (redirect do servidor aqui nao
+  // navegava de forma confiavel quando a action e chamada pelo handler).
+  return { success: true, groupId: group.id };
 }
 
 export async function joinGroup(inviteCode: string) {

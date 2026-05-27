@@ -25,8 +25,12 @@ export default function CriarBolaoPage() {
     if (result?.error) {
       toast.error(result.error);
       setLoading(false);
+    } else if (result?.groupId) {
+      toast.success("Bolao criado!");
+      router.push(`/boloes/${result.groupId}`);
+    } else {
+      setLoading(false);
     }
-    // On success, createGroup redirects automatically
   }
 
   return (
