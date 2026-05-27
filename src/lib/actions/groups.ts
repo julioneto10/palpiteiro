@@ -3,6 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+/** Recalcula os rankings (cada bolao usa a sua pontuacao). Best-effort. */
+async function recomputeStandings() {
+  try {
+    await createAdminClient().rpc("recompute_totals");
+  } catch (e) {
+    console.error("recompute_totals:", e);
+  }
+}
 
 function generateInviteCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -101,6 +111,7 @@ export async function createGroup(formData: FormData) {
     return { error: `Erro ao criar bolao: ${memberError.message}` };
   }
 
+  await recomputeStandings();
   revalidatePath("/boloes");
   redirect(`/boloes/${group.id}`);
 }
@@ -164,6 +175,7 @@ export async function joinGroup(inviteCode: string) {
     return { error: "Erro ao entrar no bolao. Tente novamente." };
   }
 
+  await recomputeStandings();
   revalidatePath("/boloes");
   revalidatePath(`/boloes/${group.id}`);
   return { success: true, groupId: group.id };
@@ -266,6 +278,8 @@ export async function updateGroupSettings(groupId: string, formData: FormData) {
     return { error: "Erro ao atualizar configuracoes." };
   }
 
+  // pontuacao pode ter mudado -> recalcula o ranking deste bolao
+  await recomputeStandings();
   revalidatePath(`/boloes/${groupId}`);
   revalidatePath(`/boloes/${groupId}/config`);
   return { success: true };

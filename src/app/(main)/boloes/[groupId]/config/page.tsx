@@ -54,7 +54,7 @@ export default function BolaoConfigPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="font-heading text-xl font-extrabold">
+          <h1 className="font-heading text-2xl font-black uppercase tracking-tight">
             Configuracoes
           </h1>
         </div>
@@ -77,7 +77,7 @@ export default function BolaoConfigPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <h1 className="font-heading text-xl font-extrabold">Configuracoes</h1>
+        <h1 className="font-heading text-2xl font-black uppercase tracking-tight">Configuracoes</h1>
       </div>
 
       <form action={handleSubmit} className="space-y-4">
@@ -126,6 +126,9 @@ export default function BolaoConfigPage() {
             <CardTitle className="text-sm">Pontuacao</CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0 space-y-3">
+            <p className="text-[10px] text-muted-foreground">
+              Vale so para este bolao. Ao salvar, o ranking e recalculado.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <label
