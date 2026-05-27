@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, ScrollText } from "lucide-react";
+import { ShieldCheck, ScrollText, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getIsAdmin,
@@ -45,12 +45,20 @@ export default async function AdminPage() {
             </p>
           </div>
         </div>
-        <Link href="/auditoria">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <ScrollText className="h-3.5 w-3.5" />
-            Auditoria
-          </Button>
-        </Link>
+        <div className="flex items-center gap-1.5">
+          <Link href="/admin/stats">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" />
+              Logs
+            </Button>
+          </Link>
+          <Link href="/auditoria">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <ScrollText className="h-3.5 w-3.5" />
+              Auditoria
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-[11px] text-muted-foreground leading-relaxed">

@@ -9,6 +9,12 @@ function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3002";
 }
 
+/** So aceita caminho interno (evita open-redirect). */
+function safeNext(formData: FormData): string {
+  const next = (formData.get("next") as string) || "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/jogos";
+}
+
 /** Cadastro com email + senha. Com auto-confirm ligado, ja loga na hora. */
 export async function signUpWithEmail(
   _prevState: AuthState,
@@ -49,7 +55,7 @@ export async function signUpWithEmail(
 
   // Com auto-confirm, signUp retorna sessao -> ja esta logado.
   if (data.session) {
-    redirect("/jogos");
+    redirect(safeNext(formData));
   }
 
   // Sem sessao (confirmacao exigida): pedir verificacao por email.
@@ -74,7 +80,7 @@ export async function signInWithPassword(
     return { error: "Email ou senha incorretos." };
   }
 
-  redirect("/jogos");
+  redirect(safeNext(formData));
 }
 
 /** Login/entrada por link magico (sem senha). */
@@ -89,9 +95,12 @@ export async function signInWithMagicLink(
     return { error: "Informe seu email." };
   }
 
+  const next = safeNext(formData);
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${siteUrl()}/callback` },
+    options: {
+      emailRedirectTo: `${siteUrl()}/callback?next=${encodeURIComponent(next)}`,
+    },
   });
 
   if (error) {

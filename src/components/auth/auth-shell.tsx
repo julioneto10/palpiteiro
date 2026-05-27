@@ -10,11 +10,14 @@ const TAPE_ITEMS = [
 
 export function AuthShell({
   active,
+  next,
   children,
 }: {
   active: "login" | "signup";
+  next?: string;
   children: React.ReactNode;
 }) {
+  const qs = next ? `?redirect=${encodeURIComponent(next)}` : "";
   const pill = (isActive: boolean) =>
     cn(
       "rounded-full px-4 py-2 text-[11px] font-extrabold uppercase tracking-wider transition-colors",
@@ -51,10 +54,10 @@ export function AuthShell({
 
         {/* Toggle Entrar / Criar conta */}
         <div className="flex self-start gap-1 rounded-full bg-white/[0.06] p-1">
-          <Link href="/login" className={pill(active === "login")}>
+          <Link href={`/login${qs}`} className={pill(active === "login")}>
             Entrar
           </Link>
-          <Link href="/cadastro" className={pill(active === "signup")}>
+          <Link href={`/cadastro${qs}`} className={pill(active === "signup")}>
             Criar conta
           </Link>
         </div>
