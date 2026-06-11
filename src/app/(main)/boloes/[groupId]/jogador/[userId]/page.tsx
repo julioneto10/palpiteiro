@@ -35,15 +35,18 @@ export default async function JogadorPalpitesPage({
   const group = await getGroupById(groupId);
   if (!group) notFound();
 
-  const [{ data: member }, { data: rawPredictions }] = await Promise.all([
+  const [{ data: member }, { data: profileRow }, { data: rawPredictions }] =
+    await Promise.all([
     supabase
       .from("group_members")
-      .select(
-        `total_points,
-         profile:profiles!group_members_user_id_fkey(display_name, avatar_url, username)`
-      )
+      .select("total_points")
       .eq("group_id", groupId)
       .eq("user_id", userId)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, username")
+      .eq("id", userId)
       .single(),
     supabase
       .from("predictions")
@@ -61,7 +64,7 @@ export default async function JogadorPalpitesPage({
 
   if (!member) notFound();
 
-  const profile = member.profile as unknown as {
+  const profile = profileRow as {
     display_name: string | null;
     avatar_url: string | null;
     username: string | null;

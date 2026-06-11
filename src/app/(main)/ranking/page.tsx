@@ -11,20 +11,32 @@ export const metadata = {
 export default async function RankingPage() {
   const supabase = await createClient();
 
-  const { data: leaderboard } = await supabase
+  // global_leaderboard.user_id referencia auth.users (nao profiles), entao
+  // buscamos os perfis em separado e juntamos (embed por FK falha no PostgREST).
+  const { data: rawLeaderboard } = await supabase
     .from("global_leaderboard")
-    .select(
-      `
-      *,
-      profile:profiles!global_leaderboard_user_id_fkey(
-        display_name,
-        avatar_url,
-        username
-      )
-    `
-    )
+    .select("*")
     .order("total_points", { ascending: false })
     .limit(100);
+
+  const lbRows = rawLeaderboard ?? [];
+  const { data: lbProfiles } = lbRows.length
+    ? await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, username")
+        .in(
+          "id",
+          lbRows.map((r) => r.user_id)
+        )
+    : { data: [] };
+
+  const lbProfileById = new Map(
+    (lbProfiles ?? []).map((p) => [p.id as string, p])
+  );
+  const leaderboard = lbRows.map((r) => ({
+    ...r,
+    profile: lbProfileById.get(r.user_id) ?? null,
+  }));
 
   const {
     data: { user },

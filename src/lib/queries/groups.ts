@@ -56,22 +56,31 @@ export async function getGroupByInviteCode(inviteCode: string) {
 
 export async function getGroupMembers(groupId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  // group_members.user_id referencia auth.users (nao profiles), entao NAO da
+  // pra embutir profiles por FK (PostgREST erra e a query inteira falha).
+  // Buscamos os membros e os perfis em separado e juntamos aqui.
+  const { data: members } = await supabase
     .from("group_members")
-    .select(
-      `
-      *,
-      profile:profiles!group_members_user_id_fkey(
-        display_name,
-        avatar_url,
-        username
-      )
-    `
-    )
+    .select("*")
     .eq("group_id", groupId)
     .order("total_points", { ascending: false });
 
-  return (data ?? []) as unknown as GroupMemberWithProfile[];
+  if (!members || members.length === 0) return [];
+
+  const userIds = members.map((m) => m.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, avatar_url, username")
+    .in("id", userIds);
+
+  const profileById = new Map(
+    (profiles ?? []).map((p) => [p.id as string, p])
+  );
+
+  return members.map((m) => ({
+    ...m,
+    profile: profileById.get(m.user_id) ?? null,
+  })) as unknown as GroupMemberWithProfile[];
 }
 
 export async function getGroupMemberCount(groupId: string) {
