@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Trophy, Users, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+import { getUserId } from "@/lib/supabase/user";
 
 const TAPE_ITEMS = [
   "★ COPA DO MUNDO 2026 ★",
@@ -33,7 +35,11 @@ const FEATURES = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Quem ja esta logado abre direto no ranking do bolao.
+  const userId = await getUserId();
+  if (userId) redirect("/inicio");
+
   return (
     <div className="min-h-dvh">
       {/* Hero escuro */}

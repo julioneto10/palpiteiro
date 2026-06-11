@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GroupActions } from "@/components/group/group-actions";
 import { ShareInvite } from "@/components/group/share-invite";
+import { LiveRefresh } from "@/components/shared/live-refresh";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -166,9 +167,15 @@ export default async function BolaoDetalhePage({
 
       {/* Leaderboard */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-          Ranking ({members.length})
-        </h2>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Ranking ({members.length})
+          </h2>
+          <LiveRefresh intervalMs={300_000} />
+        </div>
+        <p className="mb-2 text-[11px] text-muted-foreground">
+          Toque num nome para ver os palpites da pessoa.
+        </p>
         <Card>
           <CardContent className="p-0 divide-y">
             {members.map((member, index) => {
@@ -176,10 +183,11 @@ export default async function BolaoDetalhePage({
               const isCurrentUser = user?.id === member.user_id;
 
               return (
-                <div
+                <Link
                   key={member.id}
+                  href={`/boloes/${groupId}/jogador/${member.user_id}`}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3",
+                    "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60",
                     isCurrentUser && "bg-primary/5",
                     rank <= 3 && "bg-accent/5"
                   )}
@@ -213,7 +221,7 @@ export default async function BolaoDetalhePage({
                     </p>
                     <p className="text-[10px] text-muted-foreground">pts</p>
                   </div>
-                </div>
+                </Link>
               );
             })}
             {members.length === 0 && (

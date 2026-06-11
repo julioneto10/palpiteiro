@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Crown } from "lucide-react";
 import { getGroupById, getGroupMembers } from "@/lib/queries/groups";
-import { LiveRefresh } from "./live-refresh";
+import { LiveRefresh } from "@/components/shared/live-refresh";
 
 // Sempre busca dados frescos — esta tela fica aberta numa TV durante os jogos.
 export const dynamic = "force-dynamic";
@@ -52,7 +52,7 @@ export default async function TvRankingPage({
               Classificacao · {members.length} participantes
             </p>
           </div>
-          <LiveRefresh intervalMs={300_000} />
+          <LiveRefresh intervalMs={300_000} tone="dark" />
         </header>
 
         {/* Ranking */}

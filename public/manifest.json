@@ -2,7 +2,7 @@
   "name": "Palpiteiro - Bolao Copa 2026",
   "short_name": "Palpiteiro",
   "description": "Faca seus palpites para a Copa do Mundo 2026 e desafie seus amigos!",
-  "start_url": "/jogos",
+  "start_url": "/inicio",
   "display": "standalone",
   "background_color": "#0E1410",
   "theme_color": "#0E8B4B",
