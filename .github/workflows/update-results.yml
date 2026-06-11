@@ -2,12 +2,17 @@ name: Atualizar placares (Copa 2026)
 
 # Robo que puxa os placares finalizados da worldcup26.ir e aplica no banco
 # (apply_match_result -> recompute_totals). O ranking e a tela /tv atualizam
-# sozinhos. Roda a cada 10 min; cada execucao faz um loop interno curto pra
-# cobrir eventuais atrasos do agendador do GitHub.
+# sozinhos.
+#
+# Confiabilidade: o cron do GitHub atrasa/varia bastante. Em vez de depender
+# de disparos pontuais, cada execucao roda ~30 min (checa a cada 2,5 min) e e
+# agendada 2x/hora com redundancia. concurrency garante so 1 rodando por vez;
+# a proxima fica na fila e assume quando esta acabar -> cobertura ~continua.
+# Repo publico = minutos de Actions gratis/ilimitados.
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "0,30 * * * *"
   workflow_dispatch: {} # permite rodar na mao pelo painel Actions
 
 concurrency:
@@ -17,7 +22,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,6 +32,6 @@ jobs:
         env:
           SUPABASE_URL: https://zpwjfnerdcnaxvqgphku.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          LOOPS: "6"
-          SLEEP_MS: "90000"
+          LOOPS: "12"
+          SLEEP_MS: "150000"
         run: node scripts/update-results.mjs
