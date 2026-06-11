@@ -111,27 +111,42 @@ export async function getUserGroups(userId: string) {
 }
 
 /**
- * O usuario pertence a algum bolao com palpites travados?
- * Espelha a RLS (public.user_in_locked_group) so para a UX — devolve tambem
- * o nome do bolao que travou, pra mensagem amigavel. A trava de verdade e a RLS.
+ * Bolões com palpites travados (trava no nível do app — não exige mexer na
+ * estrutura do banco). Como todo mundo palpita pelo app/PWA, isto bloqueia, na
+ * prática, qualquer alteração de palpite dos membros destes bolões.
+ *
+ * Para DESTRAVAR: remova o id desta lista e faça deploy.
+ * (A trava no nível do banco/RLS é opcional e fica na migration 00011.)
+ */
+export const LOCKED_GROUP_IDS: string[] = [
+  "7a8cb3af-7238-4df1-b267-fe192d69843e", // Bolão dos guerreiros
+];
+
+/**
+ * O usuario pertence a algum bolao com palpites travados? Devolve tambem o
+ * nome do bolao que travou, pra mensagem amigavel.
  */
 export async function getMyPredictionLock(
   userId: string
 ): Promise<{ locked: boolean; groupName: string | null }> {
+  if (LOCKED_GROUP_IDS.length === 0) {
+    return { locked: false, groupName: null };
+  }
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("group_members")
-    .select("group:groups!inner(name, predictions_locked)")
+    .select("group:groups(name)")
     .eq("user_id", userId)
-    .eq("groups.predictions_locked", true)
+    .in("group_id", LOCKED_GROUP_IDS)
     .limit(1);
 
   const row = data?.[0] as unknown as
-    | { group: { name: string; predictions_locked: boolean } }
+    | { group: { name: string } | null }
     | undefined;
 
   return {
     locked: !!row,
-    groupName: row?.group.name ?? null,
+    groupName: row?.group?.name ?? null,
   };
 }
