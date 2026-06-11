@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getMatchById } from "@/lib/queries/matches";
-import { getPlayersByMatchId } from "@/lib/queries/players";
+import { getPlayersByTeamIds } from "@/lib/queries/players";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/supabase/user";
 import { TeamBadge } from "@/components/shared/team-badge";
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { PredictionForm } from "@/components/prediction/prediction-form";
@@ -32,32 +33,36 @@ export default async function MatchDetailPage({ params }: PageProps) {
   if (!match) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getUserId();
 
-  // Fetch prediction, scorer predictions, and players in parallel
-  let prediction: Prediction | null = null;
-  let scorerPredictions: ScorerPrediction[] = [];
-  let players = await getPlayersByMatchId(matchId);
+  // Jogadores: usa os times ja carregados em `match` (evita rebuscar o jogo).
+  // Tudo em paralelo: jogadores + palpite + artilheiros.
+  const teamIds = [match.home_team_id, match.away_team_id].filter(
+    Boolean
+  ) as string[];
 
-  if (user) {
-    const [predResult, scorerResult] = await Promise.all([
-      supabase
-        .from("predictions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("match_id", matchId)
-        .single(),
-      supabase
-        .from("scorer_predictions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("match_id", matchId),
-    ]);
-    prediction = predResult.data as Prediction | null;
-    scorerPredictions = (scorerResult.data as ScorerPrediction[]) ?? [];
-  }
+  const [players, predResult, scorerResult] = await Promise.all([
+    getPlayersByTeamIds(teamIds),
+    userId
+      ? supabase
+          .from("predictions")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("match_id", matchId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    userId
+      ? supabase
+          .from("scorer_predictions")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("match_id", matchId)
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const prediction = (predResult.data as Prediction | null) ?? null;
+  const scorerPredictions =
+    (scorerResult.data as ScorerPrediction[] | null) ?? [];
 
   const isLive = match.status === "live" || match.status === "half_time";
   const isFinished = match.status === "finished";
@@ -148,7 +153,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       </Card>
 
       {/* Prediction Form - show for scheduled matches when logged in */}
-      {user && isScheduled && (
+      {userId && isScheduled && (
         <PredictionForm
           match={match}
           players={players}
@@ -158,7 +163,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       )}
 
       {/* Show existing prediction for live/finished matches */}
-      {user && !isScheduled && prediction && (
+      {userId && !isScheduled && prediction && (
         <Card>
           <CardContent className="p-4">
             <h3 className="text-sm font-bold mb-2">Seu Palpite</h3>
@@ -193,7 +198,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       )}
 
       {/* Not logged in */}
-      {!user && isScheduled && (
+      {!userId && isScheduled && (
         <Card className="border-dashed border-primary/30">
           <CardContent className="p-6 text-center space-y-2">
             <p className="text-3xl">🔮</p>

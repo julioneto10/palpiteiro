@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchWithTeams } from "@/lib/types/database";
 
@@ -18,7 +19,9 @@ export async function getMatches(): Promise<MatchWithTeams[]> {
   return (data as unknown as MatchWithTeams[]) ?? [];
 }
 
-export async function getMatchById(
+// cache() deduplica a query dentro da mesma requisicao — a pagina de detalhe
+// chama getMatchById no generateMetadata e no corpo; com cache roda so 1x.
+export const getMatchById = cache(async function getMatchById(
   matchId: string
 ): Promise<MatchWithTeams | null> {
   const supabase = await createClient();
@@ -36,6 +39,31 @@ export async function getMatchById(
 
   if (error) return null;
   return data as unknown as MatchWithTeams;
+});
+
+/**
+ * Jogos que o usuario pode palpitar agora: agendados e com os dois times
+ * ja definidos (fase de grupos hoje; mata-mata entra conforme o chaveamento).
+ * Ordenados por data — base do fluxo sequencial de palpites.
+ */
+export async function getPredictableMatches(): Promise<MatchWithTeams[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("matches")
+    .select(
+      `
+      *,
+      home_team:teams!matches_home_team_id_fkey(*),
+      away_team:teams!matches_away_team_id_fkey(*)
+    `
+    )
+    .eq("status", "scheduled")
+    .not("home_team_id", "is", null)
+    .not("away_team_id", "is", null)
+    .order("kickoff_at", { ascending: true });
+
+  if (error) throw error;
+  return (data as unknown as MatchWithTeams[]) ?? [];
 }
 
 export async function getMatchesByStage(

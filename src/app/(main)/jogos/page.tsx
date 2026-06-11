@@ -42,8 +42,32 @@ export default async function JogosPage() {
     .filter((m) => m.status === "finished")
     .reverse();
 
+  const missingCount = user
+    ? upcomingMatches.filter((m) => !predictions[m.id]).length
+    : 0;
+
   return (
     <div className="space-y-6">
+      {/* CTA: palpitar em sequencia (rapido) */}
+      {user && upcomingMatches.length > 0 && (
+        <Link
+          href="/palpitar"
+          className="flex items-center justify-between gap-3 rounded-xl bg-primary px-4 py-3 text-primary-foreground shadow-sm transition-transform active:scale-[0.98]"
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase tracking-wide">
+              Palpitar em sequencia
+            </p>
+            <p className="text-xs text-primary-foreground/80">
+              {missingCount > 0
+                ? `Faltam ${missingCount} jogo${missingCount > 1 ? "s" : ""} — rapido, um apos o outro`
+                : "Revise seus palpites rapidinho"}
+            </p>
+          </div>
+          <span className="text-xl">⚡</span>
+        </Link>
+      )}
+
       {/* Quick navigation */}
       <Link
         href="/jogos/grupos"

@@ -76,6 +76,21 @@ export default async function PalpitesPage() {
         Meus Palpites
       </h1>
 
+      {/* CTA: palpitar em sequencia */}
+      <Link href="/palpitar">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-primary px-4 py-3 text-primary-foreground shadow-sm transition-transform active:scale-[0.98]">
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase tracking-wide">
+              Palpitar em sequencia
+            </p>
+            <p className="text-xs text-primary-foreground/80">
+              Preencha varios jogos rapidinho, um apos o outro
+            </p>
+          </div>
+          <span className="text-xl">⚡</span>
+        </div>
+      </Link>
+
       {/* Atalhos */}
       <div className="grid grid-cols-2 gap-2">
         <Link href="/palpites/campeao">
