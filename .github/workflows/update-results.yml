@@ -1,0 +1,32 @@
+name: Atualizar placares (Copa 2026)
+
+# Robo que puxa os placares finalizados da worldcup26.ir e aplica no banco
+# (apply_match_result -> recompute_totals). O ranking e a tela /tv atualizam
+# sozinhos. Roda a cada 10 min; cada execucao faz um loop interno curto pra
+# cobrir eventuais atrasos do agendador do GitHub.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {} # permite rodar na mao pelo painel Actions
+
+concurrency:
+  group: update-results
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Aplicar placares finalizados
+        env:
+          SUPABASE_URL: https://zpwjfnerdcnaxvqgphku.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LOOPS: "6"
+          SLEEP_MS: "90000"
+        run: node scripts/update-results.mjs
