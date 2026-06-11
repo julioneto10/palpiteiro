@@ -109,3 +109,29 @@ export async function getUserGroups(userId: string) {
 
   return (data ?? []) as (GroupMember & { group: Group })[];
 }
+
+/**
+ * O usuario pertence a algum bolao com palpites travados?
+ * Espelha a RLS (public.user_in_locked_group) so para a UX — devolve tambem
+ * o nome do bolao que travou, pra mensagem amigavel. A trava de verdade e a RLS.
+ */
+export async function getMyPredictionLock(
+  userId: string
+): Promise<{ locked: boolean; groupName: string | null }> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("group_members")
+    .select("group:groups!inner(name, predictions_locked)")
+    .eq("user_id", userId)
+    .eq("groups.predictions_locked", true)
+    .limit(1);
+
+  const row = data?.[0] as unknown as
+    | { group: { name: string; predictions_locked: boolean } }
+    | undefined;
+
+  return {
+    locked: !!row,
+    groupName: row?.group.name ?? null,
+  };
+}

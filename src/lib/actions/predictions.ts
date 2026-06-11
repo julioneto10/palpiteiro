@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/lib/supabase/user";
+import { getMyPredictionLock } from "@/lib/queries/groups";
 
 interface PredictionInput {
   matchId: string;
@@ -26,6 +27,15 @@ export async function savePredictionScore(input: {
   const userId = await getUserId();
   if (!userId) {
     return { error: "Voce precisa estar logado para dar um palpite." };
+  }
+
+  const lock = await getMyPredictionLock(userId);
+  if (lock.locked) {
+    return {
+      error: `Palpites encerrados${
+        lock.groupName ? ` pelo ${lock.groupName}` : ""
+      }.`,
+    };
   }
 
   const supabase = await createClient();
@@ -54,6 +64,15 @@ export async function upsertPrediction(input: PredictionInput) {
   const userId = await getUserId();
   if (!userId) {
     return { error: "Voce precisa estar logado para dar um palpite." };
+  }
+
+  const lock = await getMyPredictionLock(userId);
+  if (lock.locked) {
+    return {
+      error: `Palpites encerrados${
+        lock.groupName ? ` pelo ${lock.groupName}` : ""
+      }.`,
+    };
   }
 
   const supabase = await createClient();

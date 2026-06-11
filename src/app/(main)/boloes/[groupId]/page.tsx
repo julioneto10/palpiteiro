@@ -10,7 +10,7 @@ import { ShareInvite } from "@/components/group/share-invite";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Crown, Settings, Users } from "lucide-react";
+import { ArrowLeft, Crown, Settings, Tv, Users } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -152,6 +152,16 @@ export default async function BolaoDetalhePage({
             </span>
           </CardContent>
         </Card>
+      )}
+
+      {/* Modo TV / Apresentacao — abre o ranking em tela cheia, ao vivo */}
+      {isMember && (
+        <Link href={`/tv/${groupId}`} target="_blank" className="block">
+          <Button variant="outline" className="w-full gap-2">
+            <Tv className="h-4 w-4" />
+            Modo TV — mostrar ranking ao vivo
+          </Button>
+        </Link>
       )}
 
       {/* Leaderboard */}
