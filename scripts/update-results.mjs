@@ -37,6 +37,12 @@ const NAME_ALIASES = {
 
 const norm = (n) => NAME_ALIASES[n?.trim()] ?? n?.trim();
 
+// time "indefinido" na fonte (mata-mata ainda nao chaveado)
+const isDefined = (n) => {
+  const v = n?.trim();
+  return v && v.toLowerCase() !== "none" && v.toLowerCase() !== "null";
+};
+
 async function sb(path, init = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
@@ -65,8 +71,39 @@ async function runOnce() {
     teams.filter((t) => t.name_en).map((t) => [t.name_en.trim(), t.id])
   );
   const matches = await sb(
-    "matches?select=id,home_team_id,away_team_id,home_score,away_score,status"
+    "matches?select=id,match_number,stage,home_team_id,away_team_id,home_score,away_score,status"
   );
+
+  // 2b. Auto-fill do mata-mata: assim que a fonte define os DOIS times de um
+  // jogo de mata-mata ainda TBD no nosso banco, gravamos o confronto — o jogo
+  // vira palpitavel sozinho. Mapeia API.id (string) <-> nosso match_number.
+  // So toca jogo com AMBOS os times NULL; nunca sobrescreve. Idempotente.
+  let filled = 0;
+  const byNumber = new Map(matches.map((m) => [m.match_number, m]));
+  for (const g of games) {
+    if (g.type === "group") continue;
+    const m = byNumber.get(Number(g.id));
+    if (!m || m.home_team_id || m.away_team_id) continue;
+    if (!isDefined(g.home_team_name_en) || !isDefined(g.away_team_name_en)) continue;
+    const homeId = byName.get(norm(g.home_team_name_en));
+    const awayId = byName.get(norm(g.away_team_name_en));
+    if (!homeId || !awayId) continue;
+    if (!DRY_RUN) {
+      await sb(`matches?id=eq.${m.id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ home_team_id: homeId, away_team_id: awayId }),
+      });
+    }
+    // reflete na memoria pra entrar no matchByPair desta mesma execucao
+    m.home_team_id = homeId;
+    m.away_team_id = awayId;
+    filled++;
+    console.log(
+      `  ✓ confronto definido #${m.match_number} ${m.stage}${DRY_RUN ? " (dry)" : ""}`
+    );
+  }
+
   // chave = par nao-ordenado de team ids
   const pairKey = (a, b) => [a, b].sort().join("|");
   const matchByPair = new Map();
@@ -143,9 +180,9 @@ async function runOnce() {
   }
 
   console.log(
-    `[${new Date().toISOString()}] finalizados=${finished} aplicados=${applied} ignorados=${skipped} sem_casar=${unmatched}${DRY_RUN ? " (DRY)" : ""}`
+    `[${new Date().toISOString()}] confrontos_definidos=${filled} finalizados=${finished} aplicados=${applied} ignorados=${skipped} sem_casar=${unmatched}${DRY_RUN ? " (DRY)" : ""}`
   );
-  return { finished, applied, skipped, unmatched };
+  return { filled, finished, applied, skipped, unmatched };
 }
 
 // Loop interno: cobre atrasos do cron do GitHub sem depender da pontualidade
