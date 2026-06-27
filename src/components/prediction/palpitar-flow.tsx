@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScoreInput } from "./score-input";
 import { TeamBadge } from "@/components/shared/team-badge";
 import { savePredictionScore } from "@/lib/actions/predictions";
-import { STAGE_LABELS } from "@/lib/constants/scoring";
+import { STAGE_LABELS, PREDICTION_CUTOFF_MS } from "@/lib/constants/scoring";
 import { formatFullDateBRT, formatTimeBRT } from "@/lib/utils/date";
 import type { MatchWithTeams, MatchStage } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -92,6 +92,10 @@ export function PalpitarFlow({
 
   const score = scores[match.id] ?? { home: 0, away: 0 };
   const isSaved = savedIds.has(match.id);
+  // Palpites fecham 10 min antes do kickoff.
+  const isExpired =
+    new Date(match.kickoff_at).getTime() - new Date().getTime() <=
+    PREDICTION_CUTOFF_MS;
 
   function setSide(side: "home" | "away", value: number) {
     setScores((prev) => ({
@@ -227,6 +231,7 @@ export function PalpitarFlow({
               <ScoreInput
                 value={score.home}
                 onChange={(v) => setSide("home", v)}
+                disabled={isExpired}
               />
             </div>
 
@@ -247,18 +252,36 @@ export function PalpitarFlow({
               <ScoreInput
                 value={score.away}
                 onChange={(v) => setSide("away", v)}
+                disabled={isExpired}
               />
             </div>
           </div>
 
           {/* Acao principal */}
-          <Button
-            onClick={confirmAndNext}
-            className="h-12 w-full text-base font-bold"
-          >
-            {isSaved ? "Atualizar e proximo" : "Confirmar e proximo"}
-            <ChevronRight className="ml-1 h-5 w-5" />
-          </Button>
+          {isExpired ? (
+            <div className="space-y-2">
+              <p className="text-center text-xs font-medium text-muted-foreground">
+                Palpites encerrados para este jogo (fecham 10 min antes).
+              </p>
+              <Button
+                onClick={() => goTo(index + 1)}
+                disabled={index === total - 1}
+                variant="outline"
+                className="h-12 w-full text-base font-bold"
+              >
+                Proximo jogo
+                <ChevronRight className="ml-1 h-5 w-5" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={confirmAndNext}
+              className="h-12 w-full text-base font-bold"
+            >
+              {isSaved ? "Atualizar e proximo" : "Confirmar e proximo"}
+              <ChevronRight className="ml-1 h-5 w-5" />
+            </Button>
+          )}
         </CardContent>
       </Card>
 

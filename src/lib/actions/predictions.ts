@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/lib/supabase/user";
 import { getMyPredictionLock } from "@/lib/queries/groups";
+import { PREDICTION_CUTOFF_MS } from "@/lib/constants/scoring";
 
 interface PredictionInput {
   matchId: string;
@@ -40,14 +41,17 @@ export async function savePredictionScore(input: {
 
   const supabase = await createClient();
 
-  // Fase de grupos encerrada para palpites — so mata-mata (decisao 27/06).
-  const { data: stageRow } = await supabase
+  // Fase de grupos encerrada (so mata-mata) + fecha 10 min antes do kickoff.
+  const { data: m } = await supabase
     .from("matches")
-    .select("stage")
+    .select("stage, kickoff_at")
     .eq("id", input.matchId)
     .single();
-  if (stageRow?.stage === "group") {
+  if (m?.stage === "group") {
     return { error: "A fase de grupos esta encerrada para palpites." };
+  }
+  if (m && new Date(m.kickoff_at).getTime() - Date.now() <= PREDICTION_CUTOFF_MS) {
+    return { error: "Palpites encerrados (fecham 10 min antes do jogo)." };
   }
 
   const { error } = await supabase.from("predictions").upsert(
@@ -104,8 +108,8 @@ export async function upsertPrediction(input: PredictionInput) {
     return { error: "A fase de grupos esta encerrada para palpites." };
   }
 
-  if (new Date(match.kickoff_at) <= new Date()) {
-    return { error: "O prazo para palpites neste jogo ja encerrou." };
+  if (new Date(match.kickoff_at).getTime() - Date.now() <= PREDICTION_CUTOFF_MS) {
+    return { error: "Palpites encerrados (fecham 10 min antes do jogo)." };
   }
 
   if (match.status !== "scheduled") {

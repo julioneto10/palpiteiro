@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScoreInput } from "./score-input";
@@ -8,20 +9,23 @@ import { PredictionLockTimer } from "./prediction-lock-timer";
 import { TeamBadge } from "@/components/shared/team-badge";
 import { upsertPrediction } from "@/lib/actions/predictions";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
-import { PREDICTION_HINT_SCORING } from "@/lib/constants/scoring";
+import { Check, Loader2, ChevronRight, Trophy } from "lucide-react";
+import { PREDICTION_HINT_SCORING, PREDICTION_CUTOFF_MS } from "@/lib/constants/scoring";
 import type { MatchWithTeams, Prediction } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 interface PredictionFormProps {
   match: MatchWithTeams;
   existingPrediction?: Prediction | null;
+  nextMatchId?: string | null;
 }
 
 export function PredictionForm({
   match,
   existingPrediction,
+  nextMatchId = null,
 }: PredictionFormProps) {
+  const router = useRouter();
   const [homeScore, setHomeScore] = useState(
     existingPrediction?.predicted_home_score ?? 0
   );
@@ -31,7 +35,9 @@ export function PredictionForm({
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
-  const isExpired = new Date(match.kickoff_at) <= new Date();
+  const isExpired =
+    new Date(match.kickoff_at).getTime() - new Date().getTime() <=
+    PREDICTION_CUTOFF_MS;
   const isEditing = !!existingPrediction;
 
   function handleScoreChange(team: "home" | "away", value: number) {
@@ -164,6 +170,28 @@ export function PredictionForm({
             "Confirmar Palpite"
           )}
         </Button>
+
+        {/* Depois de salvar: leva pro proximo jogo (ou pra classificacao) */}
+        {saved &&
+          (nextMatchId ? (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/jogos/${nextMatchId}`)}
+              className="w-full h-12 text-base font-bold"
+            >
+              Proximo jogo
+              <ChevronRight className="h-5 w-5 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => router.push("/inicio")}
+              className="w-full h-12 text-base font-bold"
+            >
+              <Trophy className="h-5 w-5 mr-2" />
+              Ver classificacao
+            </Button>
+          ))}
       </CardContent>
     </Card>
   );

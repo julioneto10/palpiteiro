@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getMatchById } from "@/lib/queries/matches";
+import { getMatchById, getPredictableMatches } from "@/lib/queries/matches";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/lib/supabase/user";
 import { TeamBadge } from "@/components/shared/team-badge";
@@ -48,6 +48,16 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const isLive = match.status === "live" || match.status === "half_time";
   const isFinished = match.status === "finished";
   const isScheduled = match.status === "scheduled";
+  const canPredict = isScheduled && match.stage !== "group";
+
+  // Proximo jogo palpitavel (mesma ordem do fluxo sequencial), pra navegar
+  // direto de um palpite para o proximo na pagina individual.
+  let nextMatchId: string | null = null;
+  if (canPredict) {
+    const predictables = await getPredictableMatches();
+    const idx = predictables.findIndex((m) => m.id === matchId);
+    nextMatchId = idx !== -1 ? predictables[idx + 1]?.id ?? null : null;
+  }
 
   return (
     <div className="space-y-4">
@@ -135,8 +145,12 @@ export default async function MatchDetailPage({ params }: PageProps) {
 
       {/* Form de palpite: jogos agendados do mata-mata (fase de grupos
           encerrada para palpites). */}
-      {userId && isScheduled && match.stage !== "group" && (
-        <PredictionForm match={match} existingPrediction={prediction} />
+      {userId && canPredict && (
+        <PredictionForm
+          match={match}
+          existingPrediction={prediction}
+          nextMatchId={nextMatchId}
+        />
       )}
 
       {/* Jogo de grupo ainda agendado: palpites encerrados */}

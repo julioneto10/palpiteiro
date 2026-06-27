@@ -25,6 +25,14 @@ export const PREDICTION_HINT_SCORING = {
   correct_scorer: 0,
 } as const;
 
+/**
+ * Margem de seguranca: os palpites de um jogo fecham este tanto de tempo
+ * ANTES do kickoff (nao no apito). Aplicada nas actions e na UI. O backstop
+ * no banco (RLS) usa kickoff > now(); pra casar exatamente, ver migration
+ * 00012 (opcional — o app ja enforce os 10 min em toda escrita).
+ */
+export const PREDICTION_CUTOFF_MS = 10 * 60 * 1000; // 10 minutos
+
 export type ScoringConfig = {
   correct_winner: number;
   exact_score: number;
