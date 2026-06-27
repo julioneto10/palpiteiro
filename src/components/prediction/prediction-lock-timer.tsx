@@ -3,6 +3,7 @@
 import { useCountdown } from "@/lib/hooks/use-countdown";
 import { Clock, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PREDICTION_CUTOFF_MS } from "@/lib/constants/scoring";
 
 interface PredictionLockTimerProps {
   kickoffAt: string;
@@ -13,7 +14,11 @@ export function PredictionLockTimer({
   kickoffAt,
   className,
 }: PredictionLockTimerProps) {
-  const { formatted, isExpired, total } = useCountdown(kickoffAt);
+  // Conta ate o corte (10 min antes do kickoff), nao ate o apito.
+  const cutoff = new Date(
+    new Date(kickoffAt).getTime() - PREDICTION_CUTOFF_MS
+  ).toISOString();
+  const { formatted, isExpired, total } = useCountdown(cutoff);
 
   const isUrgent = !isExpired && total < 1000 * 60 * 60; // less than 1 hour
 
