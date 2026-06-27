@@ -4,28 +4,23 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScoreInput } from "./score-input";
-import { ScorerPicker } from "./scorer-picker";
 import { PredictionLockTimer } from "./prediction-lock-timer";
 import { TeamBadge } from "@/components/shared/team-badge";
 import { upsertPrediction } from "@/lib/actions/predictions";
 import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
 import { PREDICTION_HINT_SCORING } from "@/lib/constants/scoring";
-import type { MatchWithTeams, Player, Prediction, ScorerPrediction } from "@/lib/types/database";
+import type { MatchWithTeams, Prediction } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 interface PredictionFormProps {
   match: MatchWithTeams;
-  players: Player[];
   existingPrediction?: Prediction | null;
-  existingScorerPredictions?: ScorerPrediction[];
 }
 
 export function PredictionForm({
   match,
-  players,
   existingPrediction,
-  existingScorerPredictions = [],
 }: PredictionFormProps) {
   const [homeScore, setHomeScore] = useState(
     existingPrediction?.predicted_home_score ?? 0
@@ -33,23 +28,11 @@ export function PredictionForm({
   const [awayScore, setAwayScore] = useState(
     existingPrediction?.predicted_away_score ?? 0
   );
-  const [selectedScorerIds, setSelectedScorerIds] = useState<string[]>(
-    existingScorerPredictions.map((sp) => sp.player_id)
-  );
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   const isExpired = new Date(match.kickoff_at) <= new Date();
   const isEditing = !!existingPrediction;
-
-  function handleToggleScorer(playerId: string) {
-    setSelectedScorerIds((prev) =>
-      prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId)
-        : [...prev, playerId]
-    );
-    setSaved(false);
-  }
 
   function handleScoreChange(team: "home" | "away", value: number) {
     if (team === "home") setHomeScore(value);
@@ -63,8 +46,6 @@ export function PredictionForm({
         matchId: match.id,
         predictedHomeScore: homeScore,
         predictedAwayScore: awayScore,
-        scorerPlayerIds:
-          selectedScorerIds.length > 0 ? selectedScorerIds : undefined,
       });
 
       if (result.error) {
@@ -134,17 +115,6 @@ export function PredictionForm({
           </div>
         </div>
 
-        {/* Scorer prediction */}
-        {players.length > 0 && (
-          <ScorerPicker
-            players={players}
-            homeTeam={match.home_team}
-            awayTeam={match.away_team}
-            selectedPlayerIds={selectedScorerIds}
-            onTogglePlayer={handleToggleScorer}
-            disabled={isExpired || isPending}
-          />
-        )}
 
         {/* Points preview */}
         <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -164,15 +134,6 @@ export function PredictionForm({
                 +{Math.floor(PREDICTION_HINT_SCORING.exact_score * match.score_multiplier)} pts
               </strong>
             </span>
-            {PREDICTION_HINT_SCORING.correct_scorer > 0 &&
-              selectedScorerIds.length > 0 && (
-                <span>
-                  Artilheiro:{" "}
-                  <strong className="text-success">
-                    +{Math.floor(PREDICTION_HINT_SCORING.correct_scorer * match.score_multiplier * selectedScorerIds.length)} pts
-                  </strong>
-                </span>
-              )}
           </div>
         </div>
 

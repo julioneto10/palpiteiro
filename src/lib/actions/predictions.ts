@@ -39,6 +39,17 @@ export async function savePredictionScore(input: {
   }
 
   const supabase = await createClient();
+
+  // Fase de grupos encerrada para palpites — so mata-mata (decisao 27/06).
+  const { data: stageRow } = await supabase
+    .from("matches")
+    .select("stage")
+    .eq("id", input.matchId)
+    .single();
+  if (stageRow?.stage === "group") {
+    return { error: "A fase de grupos esta encerrada para palpites." };
+  }
+
   const { error } = await supabase.from("predictions").upsert(
     {
       user_id: userId,
@@ -80,12 +91,17 @@ export async function upsertPrediction(input: PredictionInput) {
   // Verify match exists and hasn't started
   const { data: match } = await supabase
     .from("matches")
-    .select("id, kickoff_at, status")
+    .select("id, kickoff_at, status, stage")
     .eq("id", input.matchId)
     .single();
 
   if (!match) {
     return { error: "Jogo nao encontrado." };
+  }
+
+  // Fase de grupos encerrada para palpites — so mata-mata (decisao 27/06).
+  if (match.stage === "group") {
+    return { error: "A fase de grupos esta encerrada para palpites." };
   }
 
   if (new Date(match.kickoff_at) <= new Date()) {

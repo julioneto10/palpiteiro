@@ -42,9 +42,9 @@ export const getMatchById = cache(async function getMatchById(
 });
 
 /**
- * Jogos que o usuario pode palpitar agora: agendados e com os dois times
- * ja definidos (fase de grupos hoje; mata-mata entra conforme o chaveamento).
- * Ordenados por data — base do fluxo sequencial de palpites.
+ * Jogos que o usuario pode palpitar agora: agendados, com os dois times ja
+ * definidos e SO do mata-mata (a fase de grupos esta encerrada para palpites
+ * — decisao do Julio, 27/06). Ordenados por data — base do fluxo sequencial.
  */
 export async function getPredictableMatches(): Promise<MatchWithTeams[]> {
   const supabase = await createClient();
@@ -58,6 +58,7 @@ export async function getPredictableMatches(): Promise<MatchWithTeams[]> {
     `
     )
     .eq("status", "scheduled")
+    .neq("stage", "group")
     .not("home_team_id", "is", null)
     .not("away_team_id", "is", null)
     .order("kickoff_at", { ascending: true });

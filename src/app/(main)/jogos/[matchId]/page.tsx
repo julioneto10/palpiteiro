@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getMatchById } from "@/lib/queries/matches";
-import { getPlayersByTeamIds } from "@/lib/queries/players";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/lib/supabase/user";
 import { TeamBadge } from "@/components/shared/team-badge";
@@ -10,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { STAGE_LABELS } from "@/lib/constants/scoring";
 import { formatFullDateBRT, formatTimeBRT } from "@/lib/utils/date";
 import { MapPin, Clock } from "lucide-react";
-import type { MatchStage, Prediction, ScorerPrediction } from "@/lib/types/database";
+import type { MatchStage, Prediction } from "@/lib/types/database";
 import Link from "next/link";
 
 interface PageProps {
@@ -35,34 +34,16 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const supabase = await createClient();
   const userId = await getUserId();
 
-  // Jogadores: usa os times ja carregados em `match` (evita rebuscar o jogo).
-  // Tudo em paralelo: jogadores + palpite + artilheiros.
-  const teamIds = [match.home_team_id, match.away_team_id].filter(
-    Boolean
-  ) as string[];
-
-  const [players, predResult, scorerResult] = await Promise.all([
-    getPlayersByTeamIds(teamIds),
-    userId
-      ? supabase
-          .from("predictions")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("match_id", matchId)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    userId
-      ? supabase
-          .from("scorer_predictions")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("match_id", matchId)
-      : Promise.resolve({ data: null }),
-  ]);
+  const predResult = userId
+    ? await supabase
+        .from("predictions")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("match_id", matchId)
+        .maybeSingle()
+    : { data: null };
 
   const prediction = (predResult.data as Prediction | null) ?? null;
-  const scorerPredictions =
-    (scorerResult.data as ScorerPrediction[] | null) ?? [];
 
   const isLive = match.status === "live" || match.status === "half_time";
   const isFinished = match.status === "finished";
@@ -154,12 +135,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
 
       {/* Prediction Form - show for scheduled matches when logged in */}
       {userId && isScheduled && (
-        <PredictionForm
-          match={match}
-          players={players}
-          existingPrediction={prediction}
-          existingScorerPredictions={scorerPredictions}
-        />
+        <PredictionForm match={match} existingPrediction={prediction} />
       )}
 
       {/* Show existing prediction for live/finished matches */}
