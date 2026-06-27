@@ -44,9 +44,11 @@ export function PalpitarFlow({
     return init;
   });
 
-  // Jogos ja confirmados (servidor). Comeca com o que veio do banco.
+  // Jogos ja confirmados (servidor). Comeca com o que veio do banco, mas SO
+  // dos jogos presentes neste fluxo (palpitaveis agora) — senao a contagem
+  // estoura (ex.: 72 palpites antigos / 14 jogos abertos).
   const [savedIds, setSavedIds] = useState<Set<string>>(
-    () => new Set(Object.keys(initialPredictions))
+    () => new Set(matches.filter((m) => initialPredictions[m.id]).map((m) => m.id))
   );
 
   // Comeca no primeiro jogo ainda nao palpitado.
