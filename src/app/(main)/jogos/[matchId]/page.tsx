@@ -133,9 +133,23 @@ export default async function MatchDetailPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      {/* Prediction Form - show for scheduled matches when logged in */}
-      {userId && isScheduled && (
+      {/* Form de palpite: jogos agendados do mata-mata (fase de grupos
+          encerrada para palpites). */}
+      {userId && isScheduled && match.stage !== "group" && (
         <PredictionForm match={match} existingPrediction={prediction} />
+      )}
+
+      {/* Jogo de grupo ainda agendado: palpites encerrados */}
+      {userId && isScheduled && match.stage === "group" && (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center space-y-1">
+            <p className="text-2xl">🔒</p>
+            <p className="text-sm font-medium">Fase de grupos encerrada</p>
+            <p className="text-xs text-muted-foreground">
+              Os palpites agora sao so do mata-mata.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Show existing prediction for live/finished matches */}
