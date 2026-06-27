@@ -128,7 +128,9 @@ export async function getUserGroups(userId: string) {
  * (A trava no nível do banco/RLS é opcional e fica na migration 00011.)
  */
 export const LOCKED_GROUP_IDS: string[] = [
-  "7a8cb3af-7238-4df1-b267-fe192d69843e", // Bolão dos guerreiros
+  // Bolão dos guerreiros DESTRAVADO em 27/06 p/ a galera palpitar o mata-mata
+  // (16avos em diante). O prazo por jogo continua valendo via kickoff/RLS.
+  // Para retravar: re-adicione "7a8cb3af-7238-4df1-b267-fe192d69843e".
 ];
 
 /**

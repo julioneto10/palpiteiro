@@ -13,6 +13,18 @@ export const DEFAULT_SCORING = {
   },
 } as const;
 
+/**
+ * Hint de "Pontuacao possivel" mostrado no formulario de palpite. Reflete a
+ * config do bolao ativo (Bolão dos guerreiros): 1 pt vencedor + 2 pts placar
+ * exato (exato total = 1+2 = 3), sem artilheiro. A pontuacao REAL de cada
+ * bolao continua sendo a sua scoring_config no banco (usada no recompute).
+ */
+export const PREDICTION_HINT_SCORING = {
+  correct_winner: 1,
+  exact_score: 2,
+  correct_scorer: 0,
+} as const;
+
 export type ScoringConfig = {
   correct_winner: number;
   exact_score: number;

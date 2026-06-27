@@ -10,6 +10,7 @@ import { TeamBadge } from "@/components/shared/team-badge";
 import { upsertPrediction } from "@/lib/actions/predictions";
 import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
+import { PREDICTION_HINT_SCORING } from "@/lib/constants/scoring";
 import type { MatchWithTeams, Player, Prediction, ScorerPrediction } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -154,23 +155,24 @@ export function PredictionForm({
             <span>
               Vencedor:{" "}
               <strong className="text-primary">
-                {Math.floor(3 * match.score_multiplier)} pts
+                {Math.floor(PREDICTION_HINT_SCORING.correct_winner * match.score_multiplier)} pts
               </strong>
             </span>
             <span>
               Placar exato:{" "}
               <strong className="text-accent-foreground">
-                +{Math.floor(5 * match.score_multiplier)} pts
+                +{Math.floor(PREDICTION_HINT_SCORING.exact_score * match.score_multiplier)} pts
               </strong>
             </span>
-            {selectedScorerIds.length > 0 && (
-              <span>
-                Artilheiro:{" "}
-                <strong className="text-success">
-                  +{Math.floor(2 * match.score_multiplier * selectedScorerIds.length)} pts
-                </strong>
-              </span>
-            )}
+            {PREDICTION_HINT_SCORING.correct_scorer > 0 &&
+              selectedScorerIds.length > 0 && (
+                <span>
+                  Artilheiro:{" "}
+                  <strong className="text-success">
+                    +{Math.floor(PREDICTION_HINT_SCORING.correct_scorer * match.score_multiplier * selectedScorerIds.length)} pts
+                  </strong>
+                </span>
+              )}
           </div>
         </div>
 
