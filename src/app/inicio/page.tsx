@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserId } from "@/lib/supabase/user";
 import { getUserGroups } from "@/lib/queries/groups";
-
-const GUERREIROS_ID = "7a8cb3af-7238-4df1-b267-fe192d69843e";
+import { GUERREIROS_GROUP_ID } from "@/lib/constants/groups";
 
 /**
  * Tela inicial dos jogadores: manda direto pro ranking do bolao principal
@@ -17,6 +16,6 @@ export default async function InicioPage() {
   if (groups.length === 0) redirect("/boloes");
 
   const preferred =
-    groups.find((g) => g.group_id === GUERREIROS_ID) ?? groups[0];
+    groups.find((g) => g.group_id === GUERREIROS_GROUP_ID) ?? groups[0];
   redirect(`/boloes/${preferred.group_id}`);
 }

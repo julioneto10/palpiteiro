@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { getGroupById, getGroupMembers } from "@/lib/queries/groups";
+import { GUERREIROS_GROUP_ID } from "@/lib/constants/groups";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -11,32 +13,28 @@ export const metadata = {
 export default async function RankingPage() {
   const supabase = await createClient();
 
-  // global_leaderboard.user_id referencia auth.users (nao profiles), entao
-  // buscamos os perfis em separado e juntamos (embed por FK falha no PostgREST).
-  const { data: rawLeaderboard } = await supabase
-    .from("global_leaderboard")
-    .select("*")
-    .order("total_points", { ascending: false })
-    .limit(100);
+  // Ranking do Bolão dos guerreiros: usa group_members.total_points, que é
+  // recalculado com a scoring_config do próprio bolão (vencedor 1 / placar
+  // exato 3, sem artilheiro). O global_leaderboard usaria a pontuação PADRÃO
+  // (3/5/2) e não bate com o que a galera vê dentro do bolão.
+  const group = await getGroupById(GUERREIROS_GROUP_ID);
+  const members = await getGroupMembers(GUERREIROS_GROUP_ID);
 
-  const lbRows = rawLeaderboard ?? [];
-  const { data: lbProfiles } = lbRows.length
+  // Acertos / placares exatos são independentes da config (booleanos no
+  // palpite). Buscamos do global_leaderboard só pra exibir o detalhe por linha.
+  const { data: lbRows } = members.length
     ? await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, username")
+        .from("global_leaderboard")
+        .select("user_id, correct_winners, exact_scores")
         .in(
-          "id",
-          lbRows.map((r) => r.user_id)
+          "user_id",
+          members.map((m) => m.user_id)
         )
     : { data: [] };
 
-  const lbProfileById = new Map(
-    (lbProfiles ?? []).map((p) => [p.id as string, p])
+  const statsByUser = new Map(
+    (lbRows ?? []).map((r) => [r.user_id as string, r])
   );
-  const leaderboard = lbRows.map((r) => ({
-    ...r,
-    profile: lbProfileById.get(r.user_id) ?? null,
-  }));
 
   const {
     data: { user },
@@ -46,15 +44,20 @@ export default async function RankingPage() {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Trophy className="h-5 w-5 text-accent" />
-        <h1 className="font-heading text-2xl font-black tracking-tight">
-          RANKING GERAL
-        </h1>
+        <div>
+          <h1 className="font-heading text-2xl font-black tracking-tight">
+            RANKING
+          </h1>
+          <p className="text-[11px] text-muted-foreground">
+            {group?.name ?? "Bolão dos guerreiros"}
+          </p>
+        </div>
       </div>
 
-      {leaderboard && leaderboard.length > 0 ? (
+      {members.length > 0 ? (
         <Card className="overflow-hidden">
           <CardContent className="p-0 divide-y divide-border">
-            {leaderboard.map((entry, index) => {
+            {members.map((entry, index) => {
               const profile = entry.profile as {
                 display_name: string | null;
                 avatar_url: string | null;
@@ -62,6 +65,7 @@ export default async function RankingPage() {
               } | null;
               const rank = index + 1;
               const isCurrentUser = user?.id === entry.user_id;
+              const stats = statsByUser.get(entry.user_id);
 
               return (
                 <div
@@ -98,8 +102,8 @@ export default async function RankingPage() {
                       {isCurrentUser && " (voce)"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {entry.correct_winners} acertos · {entry.exact_scores}{" "}
-                      placares exatos
+                      {stats?.correct_winners ?? 0} acertos ·{" "}
+                      {stats?.exact_scores ?? 0} placares exatos
                     </p>
                   </div>
                   <div className="text-right">
