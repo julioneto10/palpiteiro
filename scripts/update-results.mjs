@@ -37,6 +37,16 @@ const NAME_ALIASES = {
 
 const norm = (n) => NAME_ALIASES[n?.trim()] ?? n?.trim();
 
+// Overrides de TEMPO NORMAL. O bolao conta apenas o placar dos 90 min. Alguns
+// jogos de mata-mata terminam empatados no tempo normal e sao decididos na
+// prorrogacao/penaltis; a API (worldcup26.ir) devolve o placar JA com os gols
+// da prorrogacao, entao fixamos aqui o placar correto e ignoramos o da API.
+// Chave = nosso match_number; valores na NOSSA orientacao [casa, fora].
+//   #82 Belgica x Senegal: 2-2 no tempo normal (Belgica venceu 3-2 na prorrog.)
+const NORMAL_TIME_OVERRIDES = {
+  82: [2, 2],
+};
+
 // time "indefinido" na fonte (mata-mata ainda nao chaveado)
 const isDefined = (n) => {
   const v = n?.trim();
@@ -57,6 +67,22 @@ async function sb(path, init = {}) {
     throw new Error(`Supabase ${path} -> ${res.status} ${await res.text()}`);
   }
   return res.status === 204 ? null : res.json();
+}
+
+// Reescreve predictions.points_earned para o padrao 1/2/0 (1 vencedor, 2 exato,
+// 0 artilheiro) e recalcula os totais. Espelha a DEFAULT_SCORING do app e a
+// scoring_config dos boloes. So mexe em palpites ja pontuados (flags != null).
+async function normalizeDefaultPoints() {
+  const patch = (query, body) =>
+    sb(`predictions?${query}`, { method: "PATCH", body: JSON.stringify(body) });
+  await patch("is_exact_score=eq.true", { points_earned: 3 });
+  await patch("is_correct_winner=eq.true&is_exact_score=eq.false", { points_earned: 1 });
+  await patch("is_correct_winner=eq.false", { points_earned: 0 });
+  await sb("scorer_predictions?points_earned=gt.0", {
+    method: "PATCH",
+    body: JSON.stringify({ points_earned: 0 }),
+  });
+  await sb("rpc/recompute_totals", { method: "POST", body: "{}" });
 }
 
 async function runOnce() {
@@ -147,8 +173,17 @@ async function runOnce() {
     const apiAway = parseInt(g.away_score, 10);
     if (Number.isNaN(apiHome) || Number.isNaN(apiAway)) continue;
     const sameHome = m.home_team_id === homeId;
-    const ourHome = sameHome ? apiHome : apiAway;
-    const ourAway = sameHome ? apiAway : apiHome;
+    let ourHome = sameHome ? apiHome : apiAway;
+    let ourAway = sameHome ? apiAway : apiHome;
+
+    // Tempo normal manda: se ha override, usa ele e ignora a API (que pode
+    // incluir gols da prorrogacao). Como isso entra antes da idempotencia, o
+    // cron passa a considerar o placar de tempo normal como o "certo" e nao
+    // fica revertendo pro placar da API.
+    const override = NORMAL_TIME_OVERRIDES[m.match_number];
+    if (override) {
+      [ourHome, ourAway] = override;
+    }
 
     // Idempotencia
     if (
@@ -160,7 +195,9 @@ async function runOnce() {
       continue;
     }
 
-    const label = `${homeName} ${apiHome}x${apiAway} ${awayName}`;
+    const label =
+      `${homeName} ${ourHome}x${ourAway} ${awayName}` +
+      (override ? ` (tempo normal; API dizia ${apiHome}x${apiAway})` : "");
     if (DRY_RUN) {
       console.log(`  [dry] aplicaria ${label} (match ${m.id})`);
       applied++;
@@ -177,6 +214,16 @@ async function runOnce() {
     });
     applied++;
     console.log(`  ✓ aplicado ${label}`);
+  }
+
+  // Auto-normaliza a pontuacao PADRAO (predictions.points_earned + leaderboard
+  // global) para 1/2/0. A funcao score_match do banco ainda usa 3/5 por dentro,
+  // entao todo jogo recem-aplicado grava 3/5; aqui re-escrevemos para o padrao
+  // atual e recalculamos os totais. Idempotente e barato. (Ver migration 00013:
+  // quando aplicada, isto vira um no-op — os valores ja saem 1/2/0 da funcao.)
+  if (applied > 0 && !DRY_RUN) {
+    await normalizeDefaultPoints();
+    console.log("  ✓ pontuacao padrao normalizada para 1/2/0 (points_earned + totais)");
   }
 
   console.log(

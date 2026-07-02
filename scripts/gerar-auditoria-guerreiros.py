@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Gera um HTML de auditoria com todos os palpites do 'Bolao dos guerreiros'.
 - Matriz em ordem cronologica real (dia a dia, do 1o ao ultimo jogo).
+- Resultados reais dos jogos finalizados + pontuacao do bolao + ranking ao vivo.
 - Clique no nome de qualquer membro -> auditoria completa daquela pessoa.
 """
 import sys, json, html, urllib.request
@@ -21,7 +22,6 @@ def get(path):
 
 
 def get_all(path):
-    """Pagina ate o fim (PostgREST corta em 1000)."""
     out, off = [], 0
     while True:
         sep = "&" if "?" in path else "?"
@@ -35,10 +35,13 @@ def get_all(path):
 
 # ----- coleta -----
 group = get(f"groups?id=eq.{GID}&select=*")[0]
+SC = group["scoring_config"]
+PT_EXACT = SC.get("exact_score", 0) or 0      # bonus por cravar o placar
+PT_WIN = SC.get("correct_winner", 0) or 0     # acertar o vencedor/empate
 
 members = get(
     f"group_members?group_id=eq.{GID}"
-    "&select=user_id,role,joined_at&order=joined_at.asc"
+    "&select=user_id,role,total_points,rank,joined_at&order=joined_at.asc"
 )
 ids = ",".join(m["user_id"] for m in members)
 profs = {
@@ -48,10 +51,10 @@ profs = {
 for m in members:
     m["name"] = profs.get(m["user_id"], m["user_id"][:8])
 
-# ORDEM CRONOLOGICA GLOBAL: por data/hora do jogo, depois numero.
+# ORDEM CRONOLOGICA GLOBAL.
 matches = get(
     "matches?stage=eq.group"
-    "&select=id,group_letter,match_number,kickoff_at,"
+    "&select=id,group_letter,match_number,kickoff_at,status,home_score,away_score,"
     "home_team:teams!matches_home_team_id_fkey(name,code),"
     "away_team:teams!matches_away_team_id_fkey(name,code)"
     "&order=kickoff_at.asc,match_number.asc"
@@ -70,8 +73,9 @@ for p in preds:
 TOTAL = len(matches)
 for m in members:
     m["filled"] = len(pred[m["user_id"]])
-# membros em ordem alfabetica (auditoria), dono fica marcado mas na ordem
 members.sort(key=lambda m: m["name"].lower())
+
+finished = [mt for mt in matches if mt["status"] == "finished"]
 
 
 # ----- helpers -----
@@ -79,32 +83,29 @@ def esc(s):
     return html.escape(str(s))
 
 
-def hc(mt):
-    return mt["home_team"]["code"] if mt["home_team"] else "?"
+def hc(mt): return mt["home_team"]["code"] if mt["home_team"] else "?"
+def ac(mt): return mt["away_team"]["code"] if mt["away_team"] else "?"
+def hn(mt): return mt["home_team"]["name"] if mt["home_team"] else "A definir"
+def an(mt): return mt["away_team"]["name"] if mt["away_team"] else "A definir"
+def dt_of(mt): return datetime.fromisoformat(mt["kickoff_at"]).astimezone(BRT)
+def day_key(d): return d.strftime("%Y-%m-%d")
+def day_label(d): return f"{WD[d.weekday()]}, {d.strftime('%d/%m')}"
 
 
-def ac(mt):
-    return mt["away_team"]["code"] if mt["away_team"] else "?"
+def sgn(n): return (n > 0) - (n < 0)
 
 
-def hn(mt):
-    return mt["home_team"]["name"] if mt["home_team"] else "A definir"
-
-
-def an(mt):
-    return mt["away_team"]["name"] if mt["away_team"] else "A definir"
-
-
-def dt_of(mt):
-    return datetime.fromisoformat(mt["kickoff_at"]).astimezone(BRT)
-
-
-def day_key(d):
-    return d.strftime("%Y-%m-%d")
-
-
-def day_label(d):
-    return f"{WD[d.weekday()]}, {d.strftime('%d/%m')}"
+def outcome(mt, pv):
+    """Retorna (classe, pts) para um palpite em jogo FINALIZADO; senao None."""
+    if mt["status"] != "finished" or pv is None:
+        return None
+    h, a = mt["home_score"], mt["away_score"]
+    ph, pa = pv
+    if ph == h and pa == a:
+        return ("exact", PT_WIN + PT_EXACT)
+    if sgn(ph - pa) == sgn(h - a):
+        return ("win", PT_WIN)
+    return ("miss", 0)
 
 
 gen_at = datetime.now(BRT).strftime("%d/%m/%Y %H:%M")
@@ -127,26 +128,29 @@ n_susp = sum(1 for p in pairs if p[0] >= SUSP)
 # ----- dados para o JS (modal por pessoa) -----
 matches_js = [
     {
-        "id": mt["id"],
-        "t": dt_of(mt).strftime("%H:%M"),
-        "day": day_label(dt_of(mt)),
-        "g": mt["group_letter"],
+        "id": mt["id"], "t": dt_of(mt).strftime("%H:%M"),
+        "day": day_label(dt_of(mt)), "g": mt["group_letter"],
         "hc": hc(mt), "ac": ac(mt), "hn": hn(mt), "an": an(mt),
+        "fin": mt["status"] == "finished",
+        "res": ([mt["home_score"], mt["away_score"]]
+                if mt["status"] == "finished" else None),
     }
     for mt in matches
 ]
 members_js = [{"id": m["user_id"], "name": m["name"], "filled": m["filled"],
-               "owner": m["role"] == "owner"} for m in members]
+               "owner": m["role"] == "owner", "pts": m["total_points"]}
+              for m in members]
 data_js = json.dumps(
-    {"matches": matches_js, "members": members_js, "pred": pred},
+    {"matches": matches_js, "members": members_js, "pred": pred,
+     "ptWin": PT_WIN, "ptExact": PT_EXACT},
     ensure_ascii=False,
 )
 
-# ----- matriz (ordenada por dia) -----
+# ----- matriz -----
 head_cols = "".join(
     f'<th class="m" data-uid="{esc(m["user_id"])}">'
     f'<div class="mname">{esc(m["name"])}</div>'
-    f'<div class="mfill">{m["filled"]}/{TOTAL}</div></th>'
+    f'<div class="mfill">{m["total_points"]} pt</div></th>'
     for m in members
 )
 
@@ -161,21 +165,36 @@ for mt in matches:
             f'<tr class="day"><td colspan="{len(members)+1}">'
             f"{esc(day_label(d))}</td></tr>"
         )
+    fin = mt["status"] == "finished"
+    res = (f'<span class="res">{mt["home_score"]}<i>×</i>{mt["away_score"]}</span>'
+           if fin else f'<span class="gtag">G{esc(mt["group_letter"])}</span>')
     label = (
         f'<div class="teams">{esc(hc(mt))} <span class="x">×</span> '
         f'{esc(ac(mt))}</div>'
-        f'<div class="dt">{esc(d.strftime("%H:%M"))} '
-        f'<span class="gtag">G{esc(mt["group_letter"])}</span></div>'
+        f'<div class="dt">{esc(d.strftime("%H:%M"))} {res}</div>'
     )
     cells = []
     for m in members:
         pv = pred[m["user_id"]].get(mt["id"])
-        cells.append(
-            '<td class="p empty">·</td>' if pv is None
-            else f'<td class="p">{pv[0]}<i>×</i>{pv[1]}</td>'
-        )
+        if pv is None:
+            cells.append('<td class="p empty">·</td>')
+        else:
+            oc = outcome(mt, pv)
+            cls = f" {oc[0]}" if oc else ""
+            cells.append(f'<td class="p{cls}">{pv[0]}<i>×</i>{pv[1]}</td>')
     rows.append(f'<tr><td class="match">{label}</td>' + "".join(cells) + "</tr>")
 rows_html = "\n".join(rows)
+
+# ----- ranking ao vivo -----
+ranked = sorted(members, key=lambda m: (-m["total_points"], m["name"].lower()))
+medal = {0: "🥇", 1: "🥈", 2: "🥉"}
+rank_rows = "".join(
+    f'<tr><td class="num">{medal.get(i, str(i+1))}</td>'
+    f'<td><button class="namelink" data-uid="{esc(m["user_id"])}">{esc(m["name"])}</button>'
+    + (' <span class="owner">dono</span>' if m["role"] == "owner" else "")
+    + f'</td><td class="num"><b>{m["total_points"]}</b></td></tr>'
+    for i, m in enumerate(ranked)
+)
 
 # ----- similaridade -----
 if n_susp:
@@ -199,7 +218,7 @@ alert_html = f"""<section class="card">
     <th>Iguais</th><th>%</th></tr></thead><tbody>{alert_rows}</tbody></table>
 </section>"""
 
-# ----- resumo (nomes clicaveis) -----
+# ----- resumo -----
 done = sum(1 for m in members if m["filled"] == TOTAL)
 summary_rows = "".join(
     f'<tr><td><button class="namelink" data-uid="{esc(m["user_id"])}">'
@@ -213,7 +232,6 @@ summary_rows = "".join(
 )
 
 stake = f"{float(group['stake_amount']):.0f}"
-sc = group["scoring_config"]
 doc = f"""<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -230,20 +248,23 @@ doc = f"""<!doctype html>
   header.top .meta {{ color:var(--mut); font-size:13px; }}
   .stats {{ display:flex; flex-wrap:wrap; gap:10px; margin:16px 0 24px; }}
   .stat {{ background:var(--bg); border:1px solid var(--line); border-radius:12px;
-           padding:10px 16px; min-width:110px; }}
+           padding:10px 16px; min-width:104px; }}
   .stat b {{ display:block; font-size:22px; font-weight:900; color:var(--green); }}
   .stat span {{ font-size:11px; text-transform:uppercase; color:var(--mut);
                 font-weight:700; letter-spacing:.5px; }}
+  .grid2 {{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }}
+  @media (max-width:760px) {{ .grid2 {{ grid-template-columns:1fr; }} }}
   .card {{ background:var(--bg); border:1px solid var(--line); border-radius:14px;
            padding:18px; margin:0 0 22px; }}
   .card h2 {{ font-size:16px; margin:0 0 4px; }}
   .card h2 small {{ font-weight:400; color:var(--mut); font-size:12px; }}
   .hint {{ color:var(--mut); font-size:12px; margin:0 0 12px; }}
   table {{ border-collapse:collapse; width:100%; }}
-  .summary td {{ padding:6px 8px; border-bottom:1px solid var(--line); font-size:13px; }}
-  .summary .num {{ text-align:center; white-space:nowrap; }}
+  .summary td, .rank td {{ padding:6px 8px; border-bottom:1px solid var(--line); font-size:13px; }}
+  .summary .num, .rank .num {{ text-align:center; white-space:nowrap; }}
   .summary .bar {{ width:120px; }}
   .summary .bar div {{ height:8px; background:var(--green2); border-radius:4px; }}
+  .rank .num b {{ font-size:15px; }}
   .namelink {{ background:none; border:none; padding:0; font:inherit; font-weight:700;
                color:var(--green); cursor:pointer; text-decoration:underline;
                text-underline-offset:2px; }}
@@ -251,6 +272,12 @@ doc = f"""<!doctype html>
   .audit {{ font-size:11px; color:var(--mut); }}
   .owner {{ font-size:10px; background:var(--green); color:#fff; padding:1px 6px;
             border-radius:6px; vertical-align:middle; }}
+  .legend {{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--mut);
+             margin:2px 0 14px; }}
+  .legend span b {{ display:inline-block; width:11px; height:11px; border-radius:3px;
+                    vertical-align:-1px; margin-right:5px; }}
+  .sw-exact {{ background:#16a34a; }} .sw-win {{ background:#3b82f6; }}
+  .sw-miss {{ background:#ef4444; }}
   .alert td,.alert th {{ padding:6px 10px; border-bottom:1px solid var(--line);
                          font-size:13px; text-align:left; }}
   .alert .num {{ text-align:center; }}
@@ -268,13 +295,16 @@ doc = f"""<!doctype html>
             max-height:92px; overflow:hidden; margin:0 auto; font-weight:700; }}
   .mfill {{ font-size:9px; color:var(--mut); margin-top:3px; }}
   td.match, th.match {{ position:sticky; left:0; background:var(--bg); z-index:2;
-                        min-width:120px; text-align:left; padding:6px 8px; }}
+                        min-width:124px; text-align:left; padding:6px 8px; }}
   thead th.match {{ z-index:4; background:#f3efe4; }}
   .teams {{ font-weight:800; font-size:13px; font-variant:tabular-nums; }}
   .teams .x {{ color:var(--mut); font-weight:400; }}
   .dt {{ font-size:10px; color:var(--mut); }}
   .gtag {{ background:#eee7d6; color:var(--mut); border-radius:4px; padding:0 4px;
            font-weight:700; }}
+  .res {{ background:var(--green); color:#fff; border-radius:4px; padding:0 5px;
+          font-weight:800; font-variant:tabular-nums; }}
+  .res i {{ font-style:normal; opacity:.7; margin:0 1px; }}
   tr.day td {{ position:sticky; left:0; background:var(--green); color:#fff;
                font-weight:800; font-size:12px; text-transform:uppercase;
                padding:4px 10px; z-index:2; }}
@@ -282,19 +312,22 @@ doc = f"""<!doctype html>
           padding:5px 4px; white-space:nowrap; }}
   td.p i {{ color:var(--mut); font-style:normal; font-weight:400; margin:0 1px; }}
   td.p.empty {{ color:#d6d3cd; font-weight:400; }}
+  td.p.exact {{ background:#dcfce7; color:#15803d; }}
+  td.p.win {{ background:#dbeafe; color:#1d4ed8; }}
+  td.p.miss {{ background:#fee2e2; color:#b91c1c; }}
   footer {{ text-align:center; color:var(--mut); font-size:12px; margin-top:30px; }}
   /* modal por pessoa */
   .ov {{ position:fixed; inset:0; background:rgba(28,25,23,.55); display:none;
          align-items:flex-start; justify-content:center; padding:30px 14px; z-index:50;
          backdrop-filter:blur(2px); }}
   .ov.open {{ display:flex; }}
-  .modal {{ background:var(--bg); border-radius:16px; width:100%; max-width:560px;
+  .modal {{ background:var(--bg); border-radius:16px; width:100%; max-width:580px;
             max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }}
   .mhead {{ position:sticky; top:0; background:var(--green); color:#fff;
             padding:16px 20px; display:flex; justify-content:space-between;
             align-items:center; z-index:1; }}
   .mhead h3 {{ margin:0; font-size:19px; font-weight:900; }}
-  .mhead .sub {{ font-size:12px; opacity:.85; }}
+  .mhead .sub {{ font-size:12px; opacity:.9; }}
   .mclose {{ background:rgba(255,255,255,.2); border:none; color:#fff; width:32px;
              height:32px; border-radius:50%; font-size:18px; cursor:pointer; }}
   .mbody {{ padding:8px 0 14px; }}
@@ -307,10 +340,15 @@ doc = f"""<!doctype html>
               padding:0 4px; flex:none; }}
   .game .nm {{ flex:1; font-size:13px; }}
   .game .nm b {{ font-weight:700; }}
+  .game .real {{ font-size:10px; color:var(--mut); }}
   .game .sc {{ font-variant:tabular-nums; font-weight:800; font-size:15px; flex:none;
               background:var(--cream); border-radius:8px; padding:3px 10px; }}
   .game .sc.no {{ color:#cbb; background:transparent; font-weight:400; }}
-  .game .sc .x {{ color:var(--mut); font-weight:400; margin:0 2px; }}
+  .game .sc.exact {{ background:#dcfce7; color:#15803d; }}
+  .game .sc.win {{ background:#dbeafe; color:#1d4ed8; }}
+  .game .sc.miss {{ background:#fee2e2; color:#b91c1c; }}
+  .game .sc .x {{ opacity:.6; font-weight:400; margin:0 2px; }}
+  .game .pt {{ font-size:11px; font-weight:800; width:34px; text-align:right; flex:none; }}
   @media print {{ .ov {{ position:static; display:block; background:none; }}
     .matrixwrap {{ max-height:none; }} }}
 </style></head>
@@ -318,18 +356,26 @@ doc = f"""<!doctype html>
   <header class="top">
     <h1>Auditoria · {esc(group['name'])}</h1>
     <div class="meta">Codigo <b>{esc(group['invite_code'])}</b> ·
-      aposta R$ {esc(stake)} · placar exato {esc(sc.get('exact_score'))} pt /
-      vencedor {esc(sc.get('correct_winner'))} pt · gerado em {esc(gen_at)}</div>
+      aposta R$ {esc(stake)} · placar exato vale {PT_WIN + PT_EXACT} pt /
+      vencedor {PT_WIN} pt · gerado em {esc(gen_at)}</div>
   </header>
 
   <div class="stats">
     <div class="stat"><b>{len(members)}</b><span>Membros</span></div>
-    <div class="stat"><b>{TOTAL}</b><span>Jogos (grupos)</span></div>
+    <div class="stat"><b>{len(finished)}/{TOTAL}</b><span>Jogos feitos</span></div>
     <div class="stat"><b>{done}</b><span>Completaram</span></div>
-    <div class="stat"><b>{len(preds)}</b><span>Palpites totais</span></div>
+    <div class="stat"><b>{len(preds)}</b><span>Palpites</span></div>
+    <div class="stat"><b>{max((m["total_points"] for m in members), default=0)}</b><span>Lider (pts)</span></div>
   </div>
 
-  {alert_html}
+  <div class="grid2">
+    <section class="card" style="margin:0">
+      <h2>🏆 Ranking ao vivo <small>· {len(finished)} jogo(s) apurado(s)</small></h2>
+      <p class="hint">Pontos reais do bolao. Clique no nome para auditar.</p>
+      <table class="rank"><tbody>{rank_rows}</tbody></table>
+    </section>
+    {alert_html}
+  </div>
 
   <section class="card">
     <h2>Preenchimento por membro <small>· clique no nome para auditar a pessoa</small></h2>
@@ -337,10 +383,15 @@ doc = f"""<!doctype html>
   </section>
 
   <section class="card" style="padding:0;overflow:hidden">
-    <div style="padding:18px 18px 10px"><h2>Matriz de palpites <small>· ordem cronologica</small></h2>
-      <p class="hint" style="margin:0">Linhas = jogos do 1o ao ultimo dia. Colunas = membros
-        (clique no nome p/ ver a pessoa). Celula = placar (mandante × visitante).
-        <span style="color:#d6d3cd">·</span> = nao palpitou.</p></div>
+    <div style="padding:18px 18px 6px"><h2>Matriz de palpites <small>· ordem cronologica</small></h2>
+      <div class="legend">
+        <span><b class="sw-exact"></b>placar cravado</span>
+        <span><b class="sw-win"></b>so o vencedor</span>
+        <span><b class="sw-miss"></b>errou</span>
+        <span><span style="color:#d6d3cd">·</span> nao palpitou</span>
+      </div>
+      <p class="hint" style="margin:0">Linhas = jogos do 1o ao ultimo dia (resultado real em verde quando ja
+        aconteceu). Colunas = membros (clique no nome). Celula = placar palpitado.</p></div>
     <div class="matrixwrap">
       <table class="matrix">
         <thead><tr><th class="match">Jogo</th>{head_cols}</tr></thead>
@@ -350,7 +401,7 @@ doc = f"""<!doctype html>
   </section>
 
   <footer>Palpiteiro · auditoria do banco real (service role).
-    {len(preds)} palpites de {len(members)} membros em {TOTAL} jogos.</footer>
+    {len(preds)} palpites de {len(members)} membros · {len(finished)}/{TOTAL} jogos apurados.</footer>
 </div>
 
 <div class="ov" id="ov">
@@ -368,25 +419,38 @@ const DATA = {data_js};
 const ov = document.getElementById('ov');
 const mBody = document.getElementById('mBody');
 
+function outcome(g, p) {{
+  if (!g.fin || !p) return null;
+  const [h,a] = g.res, [ph,pa] = p;
+  if (ph===h && pa===a) return ['exact', DATA.ptWin+DATA.ptExact];
+  const s = x => Math.sign(x);
+  if (s(ph-pa) === s(h-a)) return ['win', DATA.ptWin];
+  return ['miss', 0];
+}}
+
 function openPerson(uid) {{
   const mem = DATA.members.find(m => m.id === uid);
   if (!mem) return;
   const pr = DATA.pred[uid] || {{}};
   document.getElementById('mName').textContent = mem.name + (mem.owner ? ' 👑' : '');
   document.getElementById('mSub').textContent =
-    mem.filled + '/' + DATA.matches.length + ' jogos palpitados';
+    mem.pts + ' pts · ' + mem.filled + '/' + DATA.matches.length + ' palpitados';
   let html = '', curDay = null;
   for (const g of DATA.matches) {{
     if (g.day !== curDay) {{ curDay = g.day; html += '<div class="mday">' + g.day + '</div>'; }}
     const p = pr[g.id];
+    const oc = outcome(g, p);
+    const cls = oc ? ' ' + oc[0] : (p ? '' : ' no');
     const sc = p
-      ? '<span class="sc">' + p[0] + '<span class="x">×</span>' + p[1] + '</span>'
+      ? '<span class="sc' + cls + '">' + p[0] + '<span class="x">×</span>' + p[1] + '</span>'
       : '<span class="sc no">—</span>';
+    const real = g.fin ? '<span class="real">resultado ' + g.res[0] + '×' + g.res[1] + '</span>' : '';
+    const pt = oc ? '<span class="pt">+' + oc[1] + '</span>' : '<span class="pt"></span>';
     html += '<div class="game"><span class="tm">' + g.t + '</span>'
       + '<span class="gg">G' + g.g + '</span>'
       + '<span class="nm"><b>' + g.hc + '</b> × <b>' + g.ac + '</b> '
-      + '<span style="color:#999">' + g.hn + ' x ' + g.an + '</span></span>'
-      + sc + '</div>';
+      + '<span style="color:#999">' + g.hn + ' x ' + g.an + '</span> ' + real + '</span>'
+      + sc + pt + '</div>';
   }}
   mBody.innerHTML = html;
   mBody.scrollTop = 0;
@@ -406,6 +470,5 @@ out = "/Users/julioneto/projects/palpiteiro/auditoria-guerreiros.html"
 with open(out, "w", encoding="utf-8") as f:
     f.write(doc)
 print("OK ->", out)
-print(f"membros={len(members)} jogos={TOTAL} palpites={len(preds)} "
-      f"completos={done} suspeitos>=75%={n_susp} "
-      f"+parecido={pairs[0][0]*100:.0f}%" if pairs else "OK")
+print(f"membros={len(members)} jogos={TOTAL} finalizados={len(finished)} "
+      f"palpites={len(preds)} lider={max((m['total_points'] for m in members), default=0)}pt")

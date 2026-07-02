@@ -1,7 +1,10 @@
 export const DEFAULT_SCORING = {
-  correct_winner: 3,
-  exact_score: 5,
-  correct_scorer: 2,
+  // Padrao do sistema: 1 pt vencedor + 2 pts placar exato (exato total = 3),
+  // sem artilheiro. Mesma pontuacao do Bolão dos guerreiros — agora e o padrao
+  // de todo bolao novo e o fallback de boloes sem config propria.
+  correct_winner: 1,
+  exact_score: 2,
+  correct_scorer: 0,
   multipliers: {
     group: 1.0,
     round_of_32: 1.0,
