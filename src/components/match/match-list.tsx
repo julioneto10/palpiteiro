@@ -23,7 +23,7 @@ export function MatchList({ matches, predictions }: MatchListProps) {
     <div className="space-y-6">
       {Object.entries(grouped).map(([dateKey, dateMatches]) => (
         <div key={dateKey} className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground sticky top-14 bg-background/95 backdrop-blur py-1 z-10">
+          <h3 className="sticky top-14 z-10 bg-background/95 py-1 font-heading text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground backdrop-blur">
             {dateKey}
           </h3>
           <div className="space-y-2">

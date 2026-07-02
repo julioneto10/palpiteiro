@@ -8,30 +8,40 @@ interface TeamBadgeProps {
   className?: string;
 }
 
+const FLAG_SIZE = {
+  sm: "h-8 w-8",
+  md: "h-11 w-11",
+  lg: "h-14 w-14",
+} as const;
+
 export function TeamBadge({
   team,
   size = "md",
   showName = true,
   className,
 }: TeamBadgeProps) {
-  const chipClass = {
-    sm: "h-9 w-9 text-lg rounded-lg",
-    md: "h-11 w-11 text-2xl rounded-xl",
-    lg: "h-14 w-14 text-[2rem] rounded-2xl",
-  }[size];
-
-  const flagEmoji = team ? getFlagEmoji(team.code) : "🏳️";
-
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <span
-        className={cn(
-          "grid shrink-0 place-items-center border border-border bg-secondary leading-none",
-          chipClass
-        )}
-      >
-        {flagEmoji}
-      </span>
+      {team ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/flags/${team.code}.svg`}
+          alt={team.name}
+          className={cn(
+            "shrink-0 rounded-full ring-1 ring-foreground/15 shadow-[0_6px_16px_rgba(0,0,0,0.4)]",
+            FLAG_SIZE[size]
+          )}
+        />
+      ) : (
+        <span
+          className={cn(
+            "grid shrink-0 place-items-center rounded-full bg-secondary font-heading font-bold text-muted-foreground ring-1 ring-foreground/10",
+            FLAG_SIZE[size]
+          )}
+        >
+          ?
+        </span>
+      )}
       {showName &&
         (team ? (
           <div className="min-w-0 leading-tight">
@@ -49,32 +59,4 @@ export function TeamBadge({
         ))}
     </div>
   );
-}
-
-function getFlagEmoji(countryCode: string): string {
-  const codeMap: Record<string, string> = {
-    BRA: "🇧🇷", ARG: "🇦🇷", FRA: "🇫🇷", GER: "🇩🇪", ESP: "🇪🇸",
-    USA: "🇺🇸", MAR: "🇲🇦",
-    ENG: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", POR: "🇵🇹", NED: "🇳🇱", BEL: "🇧🇪", CRO: "🇭🇷",
-    URU: "🇺🇾", COL: "🇨🇴", MEX: "🇲🇽", JPN: "🇯🇵", KOR: "🇰🇷",
-    AUS: "🇦🇺", SEN: "🇸🇳", GHA: "🇬🇭", CMR: "🇨🇲", NGA: "🇳🇬",
-    IRN: "🇮🇷", KSA: "🇸🇦", QAT: "🇶🇦", CAN: "🇨🇦", WAL: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
-    SUI: "🇨🇭", SRB: "🇷🇸", POL: "🇵🇱", DEN: "🇩🇰", TUN: "🇹🇳",
-    CRC: "🇨🇷", ECU: "🇪🇨", PAR: "🇵🇾", CHI: "🇨🇱", PER: "🇵🇪",
-    BOL: "🇧🇴", VEN: "🇻🇪", HON: "🇭🇳", SLV: "🇸🇻", JAM: "🇯🇲",
-    PAN: "🇵🇦", TRI: "🇹🇹", CUW: "🇨🇼", HAI: "🇭🇹",
-    EGY: "🇪🇬", ALG: "🇩🇿", RSA: "🇿🇦", CIV: "🇨🇮", MLI: "🇲🇱",
-    GUI: "🇬🇳", BFA: "🇧🇫", CPV: "🇨🇻", MOZ: "🇲🇿", ZAM: "🇿🇲",
-    TAN: "🇹🇿", COD: "🇨🇩", UGA: "🇺🇬", NAM: "🇳🇦", ZIM: "🇿🇼",
-    CHN: "🇨🇳", IND: "🇮🇳", IRQ: "🇮🇶", UZB: "🇺🇿", JOR: "🇯🇴",
-    BHR: "🇧🇭", IDN: "🇮🇩", VIE: "🇻🇳", THA: "🇹🇭",
-    ITA: "🇮🇹", AUT: "🇦🇹", CZE: "🇨🇿", UKR: "🇺🇦", ROU: "🇷🇴",
-    SVK: "🇸🇰", SVN: "🇸🇮", HUN: "🇭🇺", SWE: "🇸🇪", NOR: "🇳🇴",
-    FIN: "🇫🇮", ISL: "🇮🇸", IRL: "🇮🇪", NIR: "🇬🇧", SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-    GRE: "🇬🇷", TUR: "🇹🇷", RUS: "🇷🇺", GEO: "🇬🇪", ALB: "🇦🇱",
-    BIH: "🇧🇦", MNE: "🇲🇪", MKD: "🇲🇰", KOS: "🇽🇰",
-    NZL: "🇳🇿", PNG: "🇵🇬", NCL: "🇳🇨", FIJ: "🇫🇯",
-  };
-
-  return codeMap[countryCode] ?? "🏳️";
 }

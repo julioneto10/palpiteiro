@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { CircleDot, Sparkles, Users, Trophy } from "lucide-react";
+import { CircleDot, Crosshair, Users, Trophy } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/jogos", label: "Jogos", icon: CircleDot },
-  { href: "/palpites", label: "Palpites", icon: Sparkles },
+  { href: "/palpites", label: "Palpites", icon: Crosshair },
   { href: "/boloes", label: "Boloes", icon: Users },
   { href: "/ranking", label: "Ranking", icon: Trophy },
 ] as const;
@@ -33,7 +33,7 @@ export function BottomNav() {
                 className={cn(
                   "grid h-[30px] w-[38px] place-items-center rounded-full transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-[0_4px_16px_-4px_rgba(23,178,101,0.6)]"
                     : "bg-transparent text-foreground/70"
                 )}
               >

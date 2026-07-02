@@ -81,8 +81,7 @@ export default async function ConvitePage({
       <Card className="w-full max-w-sm">
         <CardContent className="p-6 space-y-4">
           <div className="text-center space-y-2">
-            <p className="text-4xl">⚽</p>
-            <h1 className="font-heading text-xl font-bold">
+            <h1 className="font-heading text-2xl font-black uppercase tracking-wide">
               {group.name}
             </h1>
             {group.description && (

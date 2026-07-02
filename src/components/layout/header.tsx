@@ -26,7 +26,7 @@ export function Header({ user, isAdmin }: HeaderProps) {
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
         <Link href="/jogos" className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-foreground font-heading text-base font-black leading-none text-accent">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-accent font-heading text-base font-black leading-none text-accent-foreground">
             P
           </span>
           <span className="font-heading text-xl font-black tracking-tight text-foreground">
@@ -47,7 +47,7 @@ export function Header({ user, isAdmin }: HeaderProps) {
           <Link href="/perfil">
             <Avatar className="h-9 w-9">
               <AvatarImage src={user?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-foreground text-[12px] font-bold text-background">
+              <AvatarFallback className="bg-secondary text-[12px] font-bold text-foreground ring-1 ring-foreground/15">
                 {initials}
               </AvatarFallback>
             </Avatar>

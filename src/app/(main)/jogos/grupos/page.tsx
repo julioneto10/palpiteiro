@@ -36,8 +36,7 @@ export default async function GruposPage() {
 
       {sortedLetters.length === 0 && (
         <div className="text-center py-16 space-y-2">
-          <p className="text-4xl">📊</p>
-          <p className="font-heading text-lg font-bold">
+          <p className="font-heading text-2xl font-black uppercase tracking-wide">
             Tabelas em breve
           </p>
           <p className="text-sm text-muted-foreground">

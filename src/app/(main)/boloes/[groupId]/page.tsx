@@ -4,14 +4,13 @@ import { getScoringConfig } from "@/lib/constants/scoring";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GroupActions } from "@/components/group/group-actions";
 import { ShareInvite } from "@/components/group/share-invite";
 import { LiveRefresh } from "@/components/shared/live-refresh";
-import { cn } from "@/lib/utils";
+import { RankingBoard, type RankingEntry } from "@/components/shared/podium";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Crown, Settings, Tv, Users } from "lucide-react";
+import { ArrowLeft, Settings, Tv, Users } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -45,18 +44,31 @@ export default async function BolaoDetalhePage({
   const isAdmin = membership?.role === "admin";
   const isMember = !!membership;
 
-  const RankIcon = ({ rank }: { rank: number }) => (
-    <span
-      className={cn(
-        "rank-medal h-9 w-9 text-sm",
-        rank === 1 && "rank-1",
-        rank === 2 && "rank-2",
-        rank === 3 && "rank-3"
-      )}
-    >
-      {rank}
-    </span>
+  // Acertos / cravadas pra sub-linha do ranking (independem da config do bolao)
+  const { data: lbRows } = members.length
+    ? await supabase
+        .from("global_leaderboard")
+        .select("user_id, correct_winners, exact_scores")
+        .in(
+          "user_id",
+          members.map((m) => m.user_id)
+        )
+    : { data: [] };
+  const statsByUser = new Map(
+    (lbRows ?? []).map((r) => [r.user_id as string, r])
   );
+
+  const entries: RankingEntry[] = members.map((m) => {
+    const stats = statsByUser.get(m.user_id);
+    return {
+      userId: m.user_id,
+      name: m.profile?.display_name ?? "Anonimo",
+      avatarUrl: m.profile?.avatar_url ?? null,
+      points: m.total_points,
+      correctWinners: stats?.correct_winners ?? 0,
+      exactScores: stats?.exact_scores ?? 0,
+    };
+  });
 
   return (
     <div className="space-y-4">
@@ -168,7 +180,7 @@ export default async function BolaoDetalhePage({
       {/* Leaderboard */}
       <div>
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
             Ranking ({members.length})
           </h2>
           <LiveRefresh intervalMs={300_000} />
@@ -176,61 +188,17 @@ export default async function BolaoDetalhePage({
         <p className="mb-2 text-[11px] text-muted-foreground">
           Toque num nome para ver os palpites da pessoa.
         </p>
-        <Card>
-          <CardContent className="p-0 divide-y">
-            {members.map((member, index) => {
-              const rank = index + 1;
-              const isCurrentUser = user?.id === member.user_id;
-
-              return (
-                <Link
-                  key={member.id}
-                  href={`/boloes/${groupId}/jogador/${member.user_id}`}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60",
-                    isCurrentUser && "bg-primary/5",
-                    rank <= 3 && "bg-accent/5"
-                  )}
-                >
-                  <RankIcon rank={rank} />
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={member.profile?.avatar_url ?? undefined}
-                    />
-                    <AvatarFallback className="text-xs font-bold">
-                      {(member.profile?.display_name ?? "?")[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={cn(
-                        "text-sm font-medium truncate",
-                        isCurrentUser && "text-primary font-bold"
-                      )}
-                    >
-                      {member.profile?.display_name ?? "Anonimo"}
-                      {isCurrentUser && " (voce)"}
-                      {member.role === "owner" && (
-                        <Crown className="inline h-3 w-3 ml-1 text-yellow-500" />
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-heading text-2xl font-black text-primary leading-none">
-                      {member.total_points}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">pts</p>
-                  </div>
-                </Link>
-              );
-            })}
-            {members.length === 0 && (
-              <div className="text-center py-8 text-sm text-muted-foreground">
-                Nenhum membro ainda
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {entries.length > 0 ? (
+          <RankingBoard
+            entries={entries}
+            currentUserId={user?.id}
+            hrefFor={(userId) => `/boloes/${groupId}/jogador/${userId}`}
+          />
+        ) : (
+          <div className="rounded-[22px] bg-card py-8 text-center text-sm text-muted-foreground">
+            Nenhum membro ainda
+          </div>
+        )}
       </div>
 
       {/* Leave group */}

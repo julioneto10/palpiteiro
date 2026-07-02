@@ -1,5 +1,6 @@
 import { getMatches } from "@/lib/queries/matches";
 import { MatchList } from "@/components/match/match-list";
+import { NextMatchHero } from "@/components/match/next-match-hero";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
@@ -42,36 +43,35 @@ export default async function JogosPage() {
     .filter((m) => m.status === "finished")
     .reverse();
 
+  // Jogos abertos pra palpite: agendados, fora da fase de grupos, com os 2 times
+  const predictableMatches = upcomingMatches.filter(
+    (m) => m.stage !== "group" && m.home_team && m.away_team
+  );
   const missingCount = user
-    ? upcomingMatches.filter((m) => !predictions[m.id]).length
+    ? predictableMatches.filter((m) => !predictions[m.id]).length
     : 0;
+
+  // Hero: proximo jogo ainda sem palpite (fallback: proximo palpitavel, depois proximo agendado)
+  const heroMatch = user
+    ? (predictableMatches.find((m) => !predictions[m.id]) ??
+      predictableMatches[0] ??
+      upcomingMatches[0])
+    : (predictableMatches[0] ?? upcomingMatches[0]);
+
+  const sectionLabel =
+    "font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-muted-foreground";
 
   return (
     <div className="space-y-6">
-      {/* CTA: palpitar em sequencia (rapido) */}
-      {user && upcomingMatches.length > 0 && (
-        <Link
-          href="/palpitar"
-          className="flex items-center justify-between gap-3 rounded-xl bg-primary px-4 py-3 text-primary-foreground shadow-sm transition-transform active:scale-[0.98]"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-wide">
-              Palpitar em sequencia
-            </p>
-            <p className="text-xs text-primary-foreground/80">
-              {missingCount > 0
-                ? `Faltam ${missingCount} jogo${missingCount > 1 ? "s" : ""} — rapido, um apos o outro`
-                : "Revise seus palpites rapidinho"}
-            </p>
-          </div>
-          <span className="text-xl">⚡</span>
-        </Link>
+      {/* Hero do proximo jogo com countdown de trava */}
+      {user && heroMatch && (
+        <NextMatchHero match={heroMatch} missingCount={missingCount} />
       )}
 
       {/* Quick navigation */}
       <Link
         href="/jogos/grupos"
-        className="flex items-center justify-center rounded-xl bg-primary/10 px-3 py-2.5 text-center text-sm font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary/20"
+        className="flex items-center justify-center rounded-xl bg-primary/10 px-3 py-2.5 text-center font-heading text-sm font-bold uppercase tracking-[0.14em] text-primary transition-colors hover:bg-primary/20"
       >
         Tabela / Fase de Grupos
       </Link>
@@ -79,7 +79,7 @@ export default async function JogosPage() {
       {/* Live matches */}
       {liveMatches.length > 0 && (
         <section className="space-y-2">
-          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-destructive">
+          <h2 className={`flex items-center gap-2 ${sectionLabel} !text-destructive`}>
             <span className="live-dot" />
             Ao Vivo
           </h2>
@@ -90,9 +90,7 @@ export default async function JogosPage() {
       {/* Upcoming matches */}
       {upcomingMatches.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Proximos Jogos
-          </h2>
+          <h2 className={sectionLabel}>Proximos Jogos</h2>
           <MatchList matches={upcomingMatches} predictions={predictions} />
         </section>
       )}
@@ -100,22 +98,19 @@ export default async function JogosPage() {
       {/* Finished matches */}
       {finishedMatches.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Resultados
-          </h2>
+          <h2 className={sectionLabel}>Resultados</h2>
           <MatchList matches={finishedMatches} predictions={predictions} />
         </section>
       )}
 
       {/* Empty state */}
       {matches.length === 0 && (
-        <div className="text-center py-16 space-y-2">
-          <p className="text-4xl">⚽</p>
-          <p className="font-heading text-lg font-bold">
+        <div className="space-y-2 py-16 text-center">
+          <p className="font-heading text-2xl font-black uppercase tracking-wide">
             Nenhum jogo disponivel
           </p>
           <p className="text-sm text-muted-foreground">
-            Os jogos da Copa do Mundo 2026 aparecerrao aqui em breve!
+            Os jogos da Copa do Mundo 2026 aparecerao aqui em breve!
           </p>
         </div>
       )}

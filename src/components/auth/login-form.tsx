@@ -36,7 +36,7 @@ export function LoginForm({ next }: { next?: string }) {
       <div className="rounded-xl border border-[#2A332E] bg-[#1B231D] p-5 text-center">
         <Mail className="mx-auto mb-2 h-8 w-8 text-accent" />
         <p className="font-bold">Link enviado!</p>
-        <p className="mt-1 text-sm text-background/60">Abra seu e-mail e clique no link para entrar.</p>
+        <p className="mt-1 text-sm text-foreground/60">Abra seu e-mail e clique no link para entrar.</p>
       </div>
     );
   }

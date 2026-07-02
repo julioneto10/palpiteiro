@@ -4,6 +4,7 @@ import { PredictionCard } from "@/components/prediction/prediction-card";
 import type { MatchWithTeams, Prediction } from "@/lib/types/database";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ArrowRight, ScrollText, Trophy } from "lucide-react";
 
 export const metadata = {
   title: "Meus Palpites",
@@ -18,8 +19,7 @@ export default async function PalpitesPage() {
   if (!user) {
     return (
       <div className="text-center py-16 space-y-4">
-        <p className="text-4xl">🔒</p>
-        <p className="font-heading text-lg font-bold">
+        <p className="font-heading text-2xl font-black uppercase tracking-wide">
           Faca login para ver seus palpites
         </p>
         <Link href="/login">
@@ -87,7 +87,7 @@ export default async function PalpitesPage() {
               Preencha varios jogos rapidinho, um apos o outro
             </p>
           </div>
-          <span className="text-xl">⚡</span>
+          <ArrowRight className="h-5 w-5 shrink-0" />
         </div>
       </Link>
 
@@ -95,13 +95,13 @@ export default async function PalpitesPage() {
       <div className="grid grid-cols-2 gap-2">
         <Link href="/palpites/campeao">
           <Button variant="outline" className="w-full justify-start gap-2 h-11">
-            <span>🏆</span>
+            <Trophy className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium">Palpite de Campeao</span>
           </Button>
         </Link>
         <Link href="/auditoria">
           <Button variant="outline" className="w-full justify-start gap-2 h-11">
-            <span>📜</span>
+            <ScrollText className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Auditoria</span>
           </Button>
         </Link>
@@ -154,8 +154,8 @@ export default async function PalpitesPage() {
       {/* Live predictions */}
       {live.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+          <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-destructive flex items-center gap-2">
+            <span className="live-dot" />
             Ao Vivo ({live.length})
           </h2>
           {live.map((p) => (
@@ -167,7 +167,7 @@ export default async function PalpitesPage() {
       {/* Pending predictions */}
       {pending.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
             Aguardando ({pending.length})
           </h2>
           {pending.map((p) => (
@@ -179,7 +179,7 @@ export default async function PalpitesPage() {
       {/* Finished predictions */}
       {finished.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
             Encerrados ({finished.length})
           </h2>
           {finished.map((p) => (
@@ -191,8 +191,7 @@ export default async function PalpitesPage() {
       {/* Empty state */}
       {predictions.length === 0 && (
         <div className="text-center py-16 space-y-2">
-          <p className="text-4xl">🔮</p>
-          <p className="font-heading text-lg font-bold">
+          <p className="font-heading text-2xl font-black uppercase tracking-wide">
             Nenhum palpite ainda
           </p>
           <p className="text-sm text-muted-foreground">

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus, LogIn, Crown, Users, ChevronRight } from "lucide-react";
+import { Plus, LogIn, Crown, ChevronRight } from "lucide-react";
 
 export const metadata = {
   title: "Boloes",
@@ -18,8 +18,7 @@ export default async function BoloesPage() {
   if (!user) {
     return (
       <div className="text-center py-16 space-y-4">
-        <p className="text-4xl">🔒</p>
-        <p className="font-heading text-lg font-bold">
+        <p className="font-heading text-2xl font-black uppercase tracking-wide">
           Faca login para ver seus boloes
         </p>
         <Link href="/login">
@@ -81,7 +80,7 @@ export default async function BoloesPage() {
                       <div className="flex items-center gap-1.5">
                         <h3 className="font-bold truncate">{group.name}</h3>
                         {membership.role === "owner" && (
-                          <Crown className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+                          <Crown className="h-3.5 w-3.5 text-accent shrink-0" />
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -112,8 +111,7 @@ export default async function BoloesPage() {
         </div>
       ) : (
         <div className="text-center py-16 space-y-2">
-          <p className="text-4xl">👥</p>
-          <p className="font-heading text-lg font-bold">
+          <p className="font-heading text-2xl font-black uppercase tracking-wide">
             Nenhum bolao ainda
           </p>
           <p className="text-sm text-muted-foreground">

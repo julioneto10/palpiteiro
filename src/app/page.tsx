@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Trophy, Users, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getUserId } from "@/lib/supabase/user";
 
 const TAPE_ITEMS = [
@@ -12,26 +12,28 @@ const TAPE_ITEMS = [
 
 const FEATURES = [
   {
-    icon: Sparkles,
-    title: "Palpites",
+    number: "01",
+    title: "Palpita",
     description:
-      "Preveja o placar e o artilheiro de cada jogo da Copa do Mundo 2026.",
+      "Preveja o placar de cada jogo da Copa do Mundo 2026 antes da bola rolar.",
   },
   {
-    icon: Users,
-    title: "Boloes",
-    description: "Crie um bolao e chame os amigos, a familia e a galera do trampo.",
+    number: "02",
+    title: "Chama a galera",
+    description:
+      "Crie um bolao e chame os amigos, a familia e a galera do trampo.",
   },
   {
-    icon: Trophy,
-    title: "Ranking",
-    description: "Acompanhe quem manda no ranking e palpite no campeao da Copa.",
+    number: "03",
+    title: "Sobe no ranking",
+    description:
+      "Cravou o placar, pontuou. Acompanhe quem manda no ranking em tempo real.",
   },
   {
-    icon: ShieldCheck,
+    number: "04",
     title: "Jogo limpo",
     description:
-      "Palpites travam no apito e os resultados ficam auditados. Sem trapaca.",
+      "Palpites travam antes do apito e os resultados ficam auditados. Sem trapaca.",
   },
 ];
 
@@ -42,8 +44,8 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-dvh">
-      {/* Hero escuro */}
-      <section className="relative overflow-hidden bg-foreground text-background">
+      {/* Hero */}
+      <section className="relative overflow-hidden">
         <div className="tape absolute inset-x-0 top-0">
           <div className="marquee">
             {[...TAPE_ITEMS, ...TAPE_ITEMS].map((item, i) => (
@@ -60,7 +62,7 @@ export default async function LandingPage() {
             <br />
             TEI<span className="text-accent">RO</span>
           </h1>
-          <p className="max-w-[300px] text-base leading-snug text-background/70">
+          <p className="max-w-[300px] text-base leading-snug text-foreground/70">
             O bolao mais divertido da Copa do Mundo 2026. Palpite os jogos,
             dispute com os amigos e suba no ranking.
           </p>
@@ -68,13 +70,13 @@ export default async function LandingPage() {
           <div className="flex flex-col gap-3">
             <Link
               href="/cadastro"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3.5 text-[15px] font-extrabold text-accent-foreground transition active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3.5 text-[15px] font-extrabold text-accent-foreground shadow-[0_10px_30px_-8px_rgba(255,212,0,0.45)] transition active:scale-[0.99]"
             >
               Comecar agora <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/login"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-background transition hover:bg-white/[0.04]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-input px-4 py-3 text-sm font-bold text-foreground transition hover:bg-foreground/[0.04]"
             >
               Ja tenho conta
             </Link>
@@ -82,25 +84,22 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Features (creme) */}
-      <section className="mx-auto w-full max-w-lg px-5 py-12">
-        <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+      {/* Como funciona */}
+      <section className="mx-auto w-full max-w-lg px-6 py-12">
+        <h2 className="mb-8 text-center font-heading text-[13px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
           Como funciona
         </h2>
-        <div className="grid gap-3">
-          {FEATURES.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="flex items-start gap-4 rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" />
-              </div>
-              <div>
+        <div className="space-y-7">
+          {FEATURES.map(({ number, title, description }) => (
+            <div key={number} className="flex items-start gap-5">
+              <span className="font-heading text-[26px] font-black leading-none text-success">
+                {number}
+              </span>
+              <div className="pt-0.5">
                 <h3 className="font-heading text-base font-extrabold uppercase tracking-wide">
                   {title}
                 </h3>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
                   {description}
                 </p>
               </div>
@@ -110,7 +109,7 @@ export default async function LandingPage() {
       </section>
 
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
-        Palpiteiro &copy; 2026 · Feito com ⚽ no Brasil
+        Palpiteiro &copy; 2026 · Feito no Brasil
       </footer>
     </div>
   );

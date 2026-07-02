@@ -32,9 +32,9 @@ export function BracketForm({ teams, existing, locked }: BracketFormProps) {
     set: (v: string) => void;
     pts: number;
   }[] = [
-    { label: "🏆 Campeao", value: champion, set: setChampion, pts: 15 },
-    { label: "🥈 Vice", value: runnerUp, set: setRunnerUp, pts: 8 },
-    { label: "🥉 3o lugar", value: third, set: setThird, pts: 5 },
+    { label: "Campeao", value: champion, set: setChampion, pts: 15 },
+    { label: "Vice", value: runnerUp, set: setRunnerUp, pts: 8 },
+    { label: "3o lugar", value: third, set: setThird, pts: 5 },
   ];
 
   function handleSubmit() {

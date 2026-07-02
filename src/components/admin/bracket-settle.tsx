@@ -62,7 +62,7 @@ export function BracketSettle({ teams, tournamentResult }: BracketSettleProps) {
     <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-yellow-500" />
+          <Trophy className="h-4 w-4 text-accent" />
           <h2 className="font-heading text-sm font-bold">
             Apurar campeao / finalistas
           </h2>

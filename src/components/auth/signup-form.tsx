@@ -13,7 +13,7 @@ export function SignupForm({ next }: { next?: string }) {
       <div className="rounded-xl border border-[#2A332E] bg-[#1B231D] p-5 text-center">
         <Mail className="mx-auto mb-2 h-8 w-8 text-accent" />
         <p className="font-bold">Quase la!</p>
-        <p className="mt-1 text-sm text-background/60">Confirme seu e-mail para ativar a conta.</p>
+        <p className="mt-1 text-sm text-foreground/60">Confirme seu e-mail para ativar a conta.</p>
       </div>
     );
   }

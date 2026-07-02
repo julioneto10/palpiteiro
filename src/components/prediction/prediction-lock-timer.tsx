@@ -47,7 +47,7 @@ export function PredictionLockTimer({
       )}
     >
       <Clock className="h-3.5 w-3.5" />
-      <span>Fecha em {formatted}</span>
+      <span suppressHydrationWarning>Fecha em {formatted}</span>
     </div>
   );
 }

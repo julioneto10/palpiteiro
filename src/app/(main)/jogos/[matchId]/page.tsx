@@ -8,7 +8,7 @@ import { PredictionForm } from "@/components/prediction/prediction-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { STAGE_LABELS } from "@/lib/constants/scoring";
 import { formatFullDateBRT, formatTimeBRT } from "@/lib/utils/date";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, Lock } from "lucide-react";
 import type { MatchStage, Prediction } from "@/lib/types/database";
 import Link from "next/link";
 
@@ -157,7 +157,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       {userId && isScheduled && match.stage === "group" && (
         <Card className="border-dashed">
           <CardContent className="p-6 text-center space-y-1">
-            <p className="text-2xl">🔒</p>
+            <Lock className="mx-auto h-6 w-6 text-muted-foreground" />
             <p className="text-sm font-medium">Fase de grupos encerrada</p>
             <p className="text-xs text-muted-foreground">
               Os palpites agora sao so do mata-mata.
@@ -205,8 +205,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       {!userId && isScheduled && (
         <Card className="border-dashed border-primary/30">
           <CardContent className="p-6 text-center space-y-2">
-            <p className="text-3xl">🔮</p>
-            <p className="font-medium">Faca seu palpite!</p>
+            <p className="font-heading text-xl font-black uppercase tracking-wide">Faca seu palpite!</p>
             <p className="text-sm text-muted-foreground">
               <Link href="/login" className="text-primary font-medium hover:underline">
                 Entre na sua conta
