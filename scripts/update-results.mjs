@@ -43,8 +43,10 @@ const norm = (n) => NAME_ALIASES[n?.trim()] ?? n?.trim();
 // da prorrogacao, entao fixamos aqui o placar correto e ignoramos o da API.
 // Chave = nosso match_number; valores na NOSSA orientacao [casa, fora].
 //   #82 Belgica x Senegal: 2-2 no tempo normal (Belgica venceu 3-2 na prorrog.)
+//   #86 Argentina x Cabo Verde: 1-1 no tempo normal (Argentina venceu 3-2 na prorrog.)
 const NORMAL_TIME_OVERRIDES = {
   82: [2, 2],
+  86: [1, 1],
 };
 
 // time "indefinido" na fonte (mata-mata ainda nao chaveado)

@@ -20,6 +20,15 @@ WC_LEAGUE = "4429"                       # FIFA World Cup
 SEASON = "2026"
 ADMIN_ID = "bfb64824-e52c-409f-bd76-010e36738c24"  # juliomiguelvitor (admin)
 
+# Overrides de TEMPO NORMAL. O bolao conta apenas o placar dos 90 min; a API
+# devolve o placar com prorrogacao. Chave = matches.id (uuid); valor = (home,
+# away) na orientacao do APP. Manter em sincronia com update-results.mjs
+# (la a chave e match_number: #82 e #86).
+NORMAL_TIME_OVERRIDES = {
+    "5d7ab952-97e1-4531-9c41-c0bc8a4ecf04": (2, 2),  # #82 Belgica x Senegal (3-2 prorrog.)
+    "d0f667bb-3025-43a3-9305-f9b2f72f8312": (1, 1),  # #86 Argentina x Cabo Verde (3-2 prorrog.)
+}
+
 # code do app -> nomes aceitos na API (1o = canonico). Normalizado na comparacao.
 TEAM_NAMES = {
     "MEX": ["Mexico"], "RSA": ["South Africa"], "KOR": ["South Korea"],
@@ -119,6 +128,11 @@ for e in events:
     # grava external_id se faltava
     if not m["external_id"] and APPLY:
         sb("PATCH", f"/rest/v1/matches?id=eq.{m['id']}", {"external_id": idev})
+
+    # tempo normal manda: se ha override, ignora o placar da API (prorrogacao)
+    ov = NORMAL_TIME_OVERRIDES.get(m["id"])
+    if ov:
+        hs, as_ = ov
 
     already = (m["status"] == "finished" and m["home_score"] == hs
                and m["away_score"] == as_)
