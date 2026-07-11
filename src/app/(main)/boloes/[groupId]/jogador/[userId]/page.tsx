@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/supabase/user";
 import { getGroupById } from "@/lib/queries/groups";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +32,7 @@ export default async function JogadorPalpitesPage({
 }) {
   const { groupId, userId } = await params;
   const supabase = await createClient();
+  const viewerId = await getUserId();
 
   const group = await getGroupById(groupId);
   if (!group) notFound();
@@ -109,6 +111,16 @@ export default async function JogadorPalpitesPage({
           </p>
         </div>
       </div>
+
+      {/* Palpites de jogos futuros so ficam visiveis pros outros depois
+          que fecham (RLS, 10 min antes do kickoff) — avisa pra nao parecer
+          que o jogador nao palpitou. */}
+      {viewerId !== userId && (
+        <p className="text-[11px] text-muted-foreground">
+          Palpites dos proximos jogos ficam ocultos ate 10 min antes de cada
+          partida.
+        </p>
+      )}
 
       {/* Lista de palpites */}
       {predictions.length === 0 ? (
