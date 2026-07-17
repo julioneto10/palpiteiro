@@ -27,6 +27,8 @@ ADMIN_ID = "bfb64824-e52c-409f-bd76-010e36738c24"  # juliomiguelvitor (admin)
 NORMAL_TIME_OVERRIDES = {
     "5d7ab952-97e1-4531-9c41-c0bc8a4ecf04": (2, 2),  # #82 Belgica x Senegal (3-2 prorrog.)
     "d0f667bb-3025-43a3-9305-f9b2f72f8312": (1, 1),  # #86 Argentina x Cabo Verde (3-2 prorrog.)
+    "5235a018-e7c1-41c1-a9f2-86d38d1a444f": (1, 1),  # #99 Noruega x Inglaterra (2-1 prorrog.)
+    "35eeb59a-928b-467a-be9c-b35911bd3068": (1, 1),  # #100 Argentina x Suica (3-1 prorrog.)
 }
 
 # code do app -> nomes aceitos na API (1o = canonico). Normalizado na comparacao.

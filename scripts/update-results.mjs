@@ -44,9 +44,13 @@ const norm = (n) => NAME_ALIASES[n?.trim()] ?? n?.trim();
 // Chave = nosso match_number; valores na NOSSA orientacao [casa, fora].
 //   #82 Belgica x Senegal: 2-2 no tempo normal (Belgica venceu 3-2 na prorrog.)
 //   #86 Argentina x Cabo Verde: 1-1 no tempo normal (Argentina venceu 3-2 na prorrog.)
+//   #99 Noruega x Inglaterra: 1-1 no tempo normal (Inglaterra venceu 2-1, gol aos 93')
+//   #100 Argentina x Suica: 1-1 no tempo normal (Argentina venceu 3-1, gols aos 112' e 120+1')
 const NORMAL_TIME_OVERRIDES = {
   82: [2, 2],
   86: [1, 1],
+  99: [1, 1],
+  100: [1, 1],
 };
 
 // time "indefinido" na fonte (mata-mata ainda nao chaveado)
